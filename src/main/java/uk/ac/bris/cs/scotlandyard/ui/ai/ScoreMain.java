@@ -7,6 +7,7 @@ import uk.ac.bris.cs.scotlandyard.model.Piece;
 import uk.ac.bris.cs.scotlandyard.model.Player;
 
 import java.util.List;
+import java.util.Set;
 
 import static java.util.stream.Collectors.toList;
 
@@ -20,7 +21,7 @@ public class ScoreMain implements ScoreInterface {
         final List<Integer> detectiveLocations = detectives.stream()
                 .map(det -> state.getDetectiveLocation((Piece.Detective) det).orElse(0))
                 .toList();
-
+        long MrxNextPosRoutes = (distancematrix.adjNodesMrx).stream().count();
         //TODO: sum of distance to detectives, see if he is surrounded
 
 
@@ -43,12 +44,12 @@ public class ScoreMain implements ScoreInterface {
         //TODO: available exits, where detectives not blocking
 
         int count = (int) detectiveLocations.stream()
-                .filter(x -> x > 1)
+                .filter(x -> x < 2)
                 .count();
-        if(count >1){
-            totalScore+=(count*20);
-        }else{
+        if(count == MrxNextPosRoutes){
             totalScore+=Integer.MIN_VALUE;
+        }else if (count <MrxNextPosRoutes){
+            totalScore+=(MrxNextPosRoutes*10);
         }
         //TODO: has underground exit
         //TODO: secret ticked remaining
@@ -56,6 +57,7 @@ public class ScoreMain implements ScoreInterface {
         //TODO: is reveal round
         //TODO:check if detective can even make move to possible positions
         //TODO:availible number of transportaion for mrx
+§1
 
 
         return 0;
