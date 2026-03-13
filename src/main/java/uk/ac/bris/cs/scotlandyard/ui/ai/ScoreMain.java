@@ -41,6 +41,15 @@ public class ScoreMain implements ScoreInterface {
 
         //TODO: nearest detective distance
         //TODO: available exits, where detectives not blocking
+
+        int count = (int) detectiveLocations.stream()
+                .filter(x -> x > 1)
+                .count();
+        if(count >1){
+            totalScore+=(count*20);
+        }else{
+            totalScore+=Integer.MIN_VALUE;
+        }
         //TODO: has underground exit
         //TODO: secret ticked remaining
         //TODO: double moves remaining
