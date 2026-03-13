@@ -10,13 +10,13 @@ import uk.ac.bris.cs.scotlandyard.model.Move;
 
 public class MyAi implements Ai {
 
-	private final MrXScore score = new MrXScore();
+	private final ScoreMain score = new ScoreMain();
 
 	@Nonnull @Override public String name() { return "Name me!"; }
 
 	@Nonnull @Override public Move pickMove(@Nonnull Board board, Pair<Long, TimeUnit> timeoutPair) {
 
-		final DistanceCalculator calc = null; //need to have the real class
+		final DistanceMainCalculator calc = null; //need to have the real class
 		final MiniMax finalmove = new MiniMax(score, calc);
 
 		Move bestmove = null;

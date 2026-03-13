@@ -1,30 +1,47 @@
 package uk.ac.bris.cs.scotlandyard.ui.ai;
 
+import com.google.common.collect.ImmutableList;
 import uk.ac.bris.cs.scotlandyard.model.Board;
 import uk.ac.bris.cs.scotlandyard.model.Move;
+import uk.ac.bris.cs.scotlandyard.model.Piece;
+import uk.ac.bris.cs.scotlandyard.model.Player;
+
 import javax.annotation.Nonnull;
 import java.util.Set;
 
+
 public class MiniMax implements MiniMaxInterface {
 
-    private final MrXScore score;
-    private final DistanceCalculator calc;
+    private final ScoreMain score;
+    private final DistanceMainCalculator calc;
 
-    public MiniMax(MrXScore score, DistanceCalculator calc) {
+    public MiniMax(ScoreMain score, DistanceMainCalculator calc) {
         this.score = score;
         this.calc = calc;
     }
 
     @Override
-    public Integer Minimax(@Nonnull Board board, Integer depth, Integer alpha, Integer beta, boolean isMrx) {
+    public Integer Minimax(@Nonnull Board board, Integer depth, Integer alpha, Integer beta, boolean ismrx) {
+        Piece Mrx = board.getPlayers().stream()
+                .filter(Piece::isMrX)
+                .findFirst()
+                .orElse(null);
+        ImmutableList<Piece> detectives = ImmutableList.copyOf(
+                board.getPlayers().stream()
+                .filter(Piece::isDetective)
+                .toList()
+        );
+
+        Board.GameState state = (Board.GameState) board;
+
         if (depth == 0 || !board.getWinner().isEmpty()) {
-            return score.score(board, calc);
+            return score.score(Mrx, detectives, state, calc);
         }
 
         Board.GameState currentState = (Board.GameState) board;
         Set<Move> availableMoves = board.getAvailableMoves();
 
-        if (isMrx) {
+        if (ismrx) {
             int maxScore = Integer.MIN_VALUE;
             for (Move move : availableMoves) {
                 Board.GameState nextState = currentState.advance(move);

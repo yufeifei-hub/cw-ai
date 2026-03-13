@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface DistanceCalculator {
     public void Dijkstras(Integer source, ImmutableValueGraph<Integer, ImmutableSet<ScotlandYard.Transport>> graph);
-    Integer getdistance(Integer source, Integer destination);
+    public Integer getdistance(Integer source, Integer destination);
 }
