@@ -7,15 +7,19 @@ import uk.ac.bris.cs.scotlandyard.model.ScotlandYard;
 import java.util.Arrays;
 
 import java.util.PriorityQueue;
-
+import java.util.Set;
 
 
 public class DistanceMainCalculator implements DistanceCalculator {
     //creates 2d matrix 200x200
     //[node][destinations]
-    private final int[][] matrix = new int[200][200]; //199 nodes shown in pos.txt of cw-model
+    private final int[][] matrix = new int[200][200];//199 nodes shown in pos.txt of cw-model
+    public Set<Integer> adjNodesMrx;
+    public ImmutableValueGraph<Integer, ImmutableSet<ScotlandYard.Transport>> graphAcesss;
 
     public DistanceMainCalculator(GameSetup setup){
+        this.graphAcesss = setup.graph;
+
         //[node] = big value
         for (int i = 0; i <= 200; i++) {
             Arrays.fill(matrix[i], 100000); // if Integer.Max_VALUE when + with wieght causes overflow
@@ -66,7 +70,7 @@ public class DistanceMainCalculator implements DistanceCalculator {
     //so if called wrong compiler will warn during compile time
     @Override
     public Integer getdistance(Integer source, Integer destination){
-
+        this.adjNodesMrx = graphAcesss.adjacentNodes(source);
         return matrix[source][destination]; // gets shortest distance from specific source to destination
     }
 
