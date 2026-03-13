@@ -11,7 +11,7 @@ import uk.ac.bris.cs.scotlandyard.model.Player;
 
 public class MyAi implements Ai {
 	private final MiniMax finalmove = new MiniMax();
-
+	//Q why cant make MiniMax a static class and call without need to instantiate
 	@Nonnull @Override public String name() { return "Name me!"; }
 
 	@Nonnull @Override public Move pickMove(@Nonnull Board board, Pair<Long, TimeUnit> timeoutPair) {
@@ -22,9 +22,9 @@ public class MyAi implements Ai {
 		final int ALPHA = Integer.MIN_VALUE;
 		final int BETA = Integer.MAX_VALUE;
 		Boolean isMrx = true;
-		var moves = board.getAvailableMoves().asList();
+		//var moves = board.getAvailableMoves().asList();
 		//loop through each move to find out which one is the best
-		for (Move move : board.getAvailableMoves()) {
+		for (Move move : board.getAvailableMoves()) { // TODO add timeoutPair check when calling minimax
 			Integer score = finalmove.Minimax(board, DEPTH, ALPHA, BETA, isMrx);
 			if (score >= maxscore) {
 				maxscore = score;
