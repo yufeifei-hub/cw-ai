@@ -7,29 +7,39 @@ import io.atlassian.fugue.Pair;
 import uk.ac.bris.cs.scotlandyard.model.Ai;
 import uk.ac.bris.cs.scotlandyard.model.Board;
 import uk.ac.bris.cs.scotlandyard.model.Move;
-import uk.ac.bris.cs.scotlandyard.model.Player;
 
 public class MyAi implements Ai {
-	private final MiniMax finalmove = new MiniMax();
+
+	private final MrXScore score = new MrXScore();
 
 	@Nonnull @Override public String name() { return "Name me!"; }
 
 	@Nonnull @Override public Move pickMove(@Nonnull Board board, Pair<Long, TimeUnit> timeoutPair) {
-		// returns a random move, replace with your own implementation
+
+		final DistanceCalculator calc = null; //need to have the real class
+		final MiniMax finalmove = new MiniMax(score, calc);
+
 		Move bestmove = null;
-		Integer maxscore = Integer.MAX_VALUE;
+		Integer maxscore = Integer.MIN_VALUE;
 		final int DEPTH = 3;
 		final int ALPHA = Integer.MIN_VALUE;
 		final int BETA = Integer.MAX_VALUE;
-		Boolean isMrx = true;
-		var moves = board.getAvailableMoves().asList();
-		//loop through each move to find out which one is the best
+		boolean isMrx = true;
+
 		for (Move move : board.getAvailableMoves()) {
-			Integer score = finalmove.Minimax(board, DEPTH, ALPHA, BETA, isMrx);
-			if (score >= maxscore) {
+			Board.GameState currentState = (Board.GameState) board;
+			Board nextState = currentState.advance(move);
+
+			Integer score = finalmove.Minimax(board, DEPTH, ALPHA, BETA, false);
+
+			if (score > maxscore) {
 				maxscore = score;
 				bestmove = move;
 			}
+		}
+
+		if (bestmove == null) {
+			bestmove = board.getAvailableMoves().iterator().next();
 		}
 		return bestmove;
 	}
