@@ -1,10 +1,7 @@
 package uk.ac.bris.cs.scotlandyard.ui.ai;
 
 import com.google.common.collect.ImmutableList;
-import uk.ac.bris.cs.scotlandyard.model.Board;
-import uk.ac.bris.cs.scotlandyard.model.GameSetup;
-import uk.ac.bris.cs.scotlandyard.model.Piece;
-import uk.ac.bris.cs.scotlandyard.model.Player;
+import uk.ac.bris.cs.scotlandyard.model.*;
 
 import java.util.List;
 
@@ -50,6 +47,24 @@ public class ScoreMain implements ScoreInterface {
         }else{
             totalScore+=Integer.MIN_VALUE;
         }
+
+
+        ImmutableList<LogEntry> log = state.getMrXTravelLog();
+        int currentMove = log.size() + 1;
+        boolean isRvealRound = ScotlandYard.REVEAL_MOVES.contains(currentMove);
+        int minDistance = detectiveLocations.stream()
+                .mapToInt(loc -> distancematrix.getdistance(MrxLocation, loc))
+                .min()
+                .orElse(999);
+        if (isRvealRound) {
+            if (minDistance <= 2) {
+                totalScore -= 300;
+            }
+        } else {
+            if (minDistance <= 1) {
+                totalScore -= 100;
+            }
+        }
         //TODO: has underground exit
         //TODO: secret ticked remaining
         //TODO: double moves remaining
@@ -58,6 +73,6 @@ public class ScoreMain implements ScoreInterface {
         //TODO:availible number of transportaion for mrx
 
 
-        return 0;
+        return totalScore;
     };
 }
