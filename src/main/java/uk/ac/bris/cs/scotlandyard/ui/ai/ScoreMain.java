@@ -30,11 +30,19 @@ public class ScoreMain implements ScoreInterface {
         }
         int avarageDistance = sumOfDistance/detectiveLocations.size();
 
-        if (avarageDistance < 2){
-            totalScore += (avarageDistance * -100); // he is likely to be surrounded as the avarage suggest that many are around 2 nodes away.
+        ImmutableList<LogEntry> log = state.getMrXTravelLog();
+        int currentMove = log.size() + 1;
+        boolean isRvealRound = ScotlandYard.REVEAL_MOVES.contains(currentMove);
+
+        if (avarageDistance < 2 && isRvealRound){
+            totalScore += Integer.MIN_VALUE; // he is likely to be surrounded as the avarage suggest that many are around 2 nodes away.
             //high penalty
-        }else{
-            totalScore += 1;
+        } else if (avarageDistance > 2 && isRvealRound) {
+            totalScore += avarageDistance * -100;
+        } else if (avarageDistance > 2 && !isRvealRound) {
+            totalScore += avarageDistance * 10;
+        } else {
+            totalScore += -200;
         }
 
         //TODO: nearest detective distance
@@ -44,35 +52,20 @@ public class ScoreMain implements ScoreInterface {
                 .filter(x -> x < 2)
                 .count();
         if(count == MrxNextPosRoutes){
-            totalScore+=Integer.MIN_VALUE;
-        }else if (count <MrxNextPosRoutes){
-            totalScore+=(MrxNextPosRoutes*10);
+            totalScore += Integer.MIN_VALUE;
+        } else if (count < MrxNextPosRoutes && isRvealRound) {
+            totalScore += (MrxNextPosRoutes * 10);
+        } else if (count < MrxNextPosRoutes && !isRvealRound) {
+            totalScore += (MrxNextPosRoutes * 20);
         }
 
-
-        ImmutableList<LogEntry> log = state.getMrXTravelLog();
-        int currentMove = log.size() + 1;
-        boolean isRvealRound = ScotlandYard.REVEAL_MOVES.contains(currentMove);
-        int minDistance = detectiveLocations.stream()
-                .mapToInt(loc -> distancematrix.getdistance(MrxLocation, loc))
-                .min()
-                .orElse(999);
-        if (isRvealRound) {
-            if (minDistance <= 2) {
-                totalScore -= 300;
-            }
-        } else {
-            if (minDistance <= 1) {
-                totalScore -= 100;
-            }
-        }
         //TODO: has underground exit
         //TODO: secret ticked remaining
         //TODO: double moves remaining
         //TODO: is reveal round
         //TODO:check if detective can even make move to possible positions
         //TODO:availible number of transportaion for mrx
-§1
+
 
 
         return totalScore;
