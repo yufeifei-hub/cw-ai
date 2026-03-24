@@ -1,12 +1,12 @@
 package uk.ac.bris.cs.scotlandyard.ui.ai;
 
+
 import com.google.common.collect.ImmutableList;
-import uk.ac.bris.cs.scotlandyard.model.Board;
-import uk.ac.bris.cs.scotlandyard.model.Move;
-import uk.ac.bris.cs.scotlandyard.model.Piece;
-import uk.ac.bris.cs.scotlandyard.model.Player;
+import com.google.common.collect.ImmutableSet;
+import uk.ac.bris.cs.scotlandyard.model.*;
 
 import javax.annotation.Nonnull;
+import java.util.List;
 import java.util.Set;
 
 
@@ -21,31 +21,28 @@ public class MiniMax implements MiniMaxInterface {
     }
 
     @Override
-    public Integer Minimax(@Nonnull Board board, Integer depth, Integer alpha, Integer beta, boolean ismrx) {
-        Piece Mrx = board.getPlayers().stream()
-                .filter(Piece::isMrX)
-                .findFirst()
-                .orElse(null);
-        ImmutableList<Piece> detectives = ImmutableList.copyOf(
-                board.getPlayers().stream()
-                .filter(Piece::isDetective)
-                .toList()
-        );
+    public Integer Minimax( NewGameState currentState, Integer depth, Integer alpha, Integer beta, boolean ismrx) {
 
-        Board.GameState state = (Board.GameState) board;
+        List<Player> detectives =currentState.detectives;
 
-        if (depth == 0 || !board.getWinner().isEmpty()) {
-            return score.score(Mrx, detectives, state, calc);
+        Player mrX = currentState.mrX;
+        GameSetup setup = currentState.setup;
+        ImmutableList<LogEntry> travelLog = currentState.travelLog;
+
+
+        if (depth == 0 || !currentState.winner().isEmpty()) {
+            return score.score(mrX, detectives,currentState.travelLog, calc);
         }
 
-        Board.GameState currentState = (Board.GameState) board;
-        Set<Move> availableMoves = board.getAvailableMoves();
+
+        Set<Move> availableMoves = currentState.availableMoves();
 
         if (ismrx) {
             int maxScore = Integer.MIN_VALUE;
             for (Move move : availableMoves) {
-                Board.GameState nextState = currentState.advance(move);
-                int childScore = Minimax(nextState, depth - 1, alpha, beta, false);
+
+                NewGameState nextstate = currentState.advanceState(move);
+                int childScore = Minimax(nextstate,depth - 1, alpha, beta, false);
                 maxScore = Math.max(maxScore, childScore);
                 alpha = Math.max(alpha, childScore);
                 if (beta <= alpha) {
@@ -56,8 +53,8 @@ public class MiniMax implements MiniMaxInterface {
         } else {
             int minScore = Integer.MAX_VALUE;
             for (Move move : availableMoves) {
-                Board.GameState nextState = currentState.advance(move);
-                int childScore = Minimax(nextState, depth - 1, alpha, beta, true);
+                NewGameState nextstate = currentState.advanceState(move);
+                int childScore = Minimax(nextstate, depth - 1, alpha, beta, true);
                 minScore = Math.min(minScore, childScore);
                 beta = Math.min(beta, childScore);
                 if (beta <= alpha) {

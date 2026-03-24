@@ -1,11 +1,10 @@
 package uk.ac.bris.cs.scotlandyard.ui.ai;
 
 import com.google.common.collect.ImmutableList;
-import uk.ac.bris.cs.scotlandyard.model.Board;
-import uk.ac.bris.cs.scotlandyard.model.GameSetup;
-import uk.ac.bris.cs.scotlandyard.model.Piece;
-import uk.ac.bris.cs.scotlandyard.model.Player;
+import uk.ac.bris.cs.scotlandyard.model.*;
+
+import java.util.List;
 
 public interface ScoreInterface {
-    Integer score(Piece MrX, ImmutableList<Piece> detectives, Board.GameState state, DistanceMainCalculator distancematrix);
+    Integer score(Player MrX, List<Player> detectives , ImmutableList<LogEntry> travelog, DistanceMainCalculator distancematrix);
 }

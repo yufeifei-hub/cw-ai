@@ -21,7 +21,7 @@ public class DistanceMainCalculator implements DistanceCalculator {
         this.graphAcesss = setup.graph;
 
         //[node] = big value
-        for (int i = 0; i <= 200; i++) {
+        for (int i = 0; i < 200; i++) {
             Arrays.fill(matrix[i], 100000); // if Integer.Max_VALUE when + with wieght causes overflow
         }
         // finds shortest distance from each node to every other node

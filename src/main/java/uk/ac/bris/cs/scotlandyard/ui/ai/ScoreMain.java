@@ -9,16 +9,14 @@ import java.util.Set;
 import static java.util.stream.Collectors.toList;
 
 public class ScoreMain implements ScoreInterface {
-    int totalScore;
-    public Integer score(Piece MrX, ImmutableList<Piece> detectives, Board.GameState state,DistanceMainCalculator distancematrix){
-
+    
+    public Integer score(Player MrX, List<Player> detectives,ImmutableList<LogEntry> travelog,DistanceMainCalculator distancematrix){
+        
 //        final int MrxLocation = MrX.location();
 //        final List<Integer> detectiveLocations = detectives.stream().map(detl-> detl.location()).toList();
-        final int MrxLocation = state.getDetectiveLocation((Piece.Detective) MrX).orElse(0);
-        final List<Integer> detectiveLocations = detectives.stream()
-                .map(det -> state.getDetectiveLocation((Piece.Detective) det).orElse(0))
-                .toList();
-        long MrxNextPosRoutes = (distancematrix.adjNodesMrx).stream().count();
+        final int MrxLocation = MrX.location();
+        final List<Integer> detectiveLocations = detectives.stream().map(p->p.location()).toList();
+        long MrxNextPosRoutes = distancematrix.graphAcesss.adjacentNodes(MrxLocation).size();
         //TODO: sum of distance to detectives, see if he is surrounded
 
 
@@ -30,12 +28,13 @@ public class ScoreMain implements ScoreInterface {
         }
         int avarageDistance = sumOfDistance/detectiveLocations.size();
 
-        ImmutableList<LogEntry> log = state.getMrXTravelLog();
+        ImmutableList<LogEntry> log = travelog;
         int currentMove = log.size() + 1;
         boolean isRvealRound = ScotlandYard.REVEAL_MOVES.contains(currentMove);
+        int totalScore = 0;
 
         if (avarageDistance < 2 && isRvealRound){
-            totalScore += Integer.MIN_VALUE; // he is likely to be surrounded as the avarage suggest that many are around 2 nodes away.
+            totalScore += Integer.MIN_VALUE / 2; // he is likely to be surrounded as the avarage suggest that many are around 2 nodes away.
             //high penalty
         } else if (avarageDistance > 2 && isRvealRound) {
             totalScore += avarageDistance * -100;
@@ -48,8 +47,8 @@ public class ScoreMain implements ScoreInterface {
         //TODO: nearest detective distance
         //TODO: available exits, where detectives not blocking
 
-        int count = (int) detectiveLocations.stream()
-                .filter(x -> x < 2)
+        long count = detectiveLocations.stream()
+                .filter(x -> distancematrix.getdistance(MrxLocation, x) < 2)
                 .count();
         if(count == MrxNextPosRoutes){
             totalScore += Integer.MIN_VALUE;
