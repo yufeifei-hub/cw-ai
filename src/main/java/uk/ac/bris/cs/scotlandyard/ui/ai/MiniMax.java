@@ -30,8 +30,17 @@ public class MiniMax implements MiniMaxInterface {
         ImmutableList<LogEntry> travelLog = currentState.travelLog;
 
 
+
         if (depth == 0 || !currentState.winner().isEmpty()) {
-            return score.score(mrX, detectives,currentState.travelLog, calc);
+            ImmutableSet<Piece> winners = currentState.winner();
+            if (!winners.isEmpty()) {
+                if (winners.contains(currentState.mrX.piece())) {
+                    return Integer.MAX_VALUE / 2;
+                } else {
+                    return Integer.MIN_VALUE / 2;
+                }
+            }
+            return score.score(mrX, detectives, currentState.travelLog, calc);
         }
 
 

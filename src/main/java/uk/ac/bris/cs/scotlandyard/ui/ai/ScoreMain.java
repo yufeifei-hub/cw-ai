@@ -44,6 +44,7 @@ public class ScoreMain implements ScoreInterface {
             totalScore += -200;
         }
 
+
         //TODO: nearest detective distance
         //TODO: available exits, where detectives not blocking
 
@@ -51,11 +52,31 @@ public class ScoreMain implements ScoreInterface {
                 .filter(x -> distancematrix.getdistance(MrxLocation, x) < 2)
                 .count();
         if(count == MrxNextPosRoutes){
-            totalScore += Integer.MIN_VALUE;
+            totalScore += Integer.MIN_VALUE / 2;
         } else if (count < MrxNextPosRoutes && isRvealRound) {
             totalScore += (MrxNextPosRoutes * 10);
         } else if (count < MrxNextPosRoutes && !isRvealRound) {
             totalScore += (MrxNextPosRoutes * 20);
+        }
+
+
+        int ticketBonus = 0;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.SECRET, 0) * 20;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.DOUBLE, 0) * 20;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.UNDERGROUND, 0) * 20;
+        totalScore += ticketBonus;
+
+
+        int roundBonus = currentMove * 5;
+        totalScore += roundBonus;
+
+
+        int minDistance = detectiveLocations.stream()
+                .mapToInt(x -> distancematrix.getdistance(MrxLocation, x))
+                .min()
+                .orElse(100);
+        if (minDistance < 3) {
+            totalScore -= (3 - minDistance) * 30;
         }
 
         //TODO: has underground exit

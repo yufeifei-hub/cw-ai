@@ -37,11 +37,16 @@ public class MyAi implements Ai {
 
 		List<Player> DetectivePlayer = detectiveLocations.keySet().stream().map(d->new Player(d,tickets.get(d),detectiveLocations.get(d))).toList();
 
+
+		int randomSeed = (int) System.currentTimeMillis();
+		int randomMrXLocation = ScotlandYard.generateMrXLocation(randomSeed);
+
 		Player mrX = board.getPlayers().stream()
 				.filter(Piece::isMrX)
-				.map(p -> new Player(p, tickets.get(p),42))
+				.map(p -> new Player(p, tickets.get(p), randomMrXLocation))
 				.findAny()
 				.orElseThrow();
+
 
 		ImmutableList<LogEntry> travalLog = board.getMrXTravelLog();
 		GameSetup setup = board.getSetup();
