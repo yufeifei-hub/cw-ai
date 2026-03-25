@@ -12,6 +12,7 @@ import io.atlassian.fugue.Option;
 import jakarta.annotation.Nonnull;
 import io.atlassian.fugue.Pair;
 import uk.ac.bris.cs.scotlandyard.model.*;
+import uk.ac.bris.cs.scotlandyard.ui.model.PlayerProperty;
 
 public class MyAi implements Ai {
 
