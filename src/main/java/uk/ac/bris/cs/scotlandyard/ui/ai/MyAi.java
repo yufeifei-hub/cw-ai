@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import io.atlassian.fugue.Option;
 import jakarta.annotation.Nonnull;
 import io.atlassian.fugue.Pair;
 import uk.ac.bris.cs.scotlandyard.model.*;
@@ -36,14 +37,21 @@ public class MyAi implements Ai {
 						x1 -> board.getDetectiveLocation(x1).orElseThrow())));
 
 		List<Player> DetectivePlayer = detectiveLocations.keySet().stream().map(d->new Player(d,tickets.get(d),detectiveLocations.get(d))).toList();
+		int MrXLocation;
+		if(board.getMrXTravelLog().isEmpty()){
+			int randomSeed = (int) System.currentTimeMillis();
+			MrXLocation = ScotlandYard.generateMrXLocation(randomSeed);
+		}else{
+			Optional<Integer> MrXLocationtoUpdate =
+					NewGameState.revealedtravelLog.get(NewGameState.revealedtravelLog.size() - 1).location();
+			MrXLocation = MrXLocationtoUpdate.get();
+			System.out.println("Mrxlocation: "+MrXLocation);
+		}
 
-
-		int randomSeed = (int) System.currentTimeMillis();
-		int randomMrXLocation = ScotlandYard.generateMrXLocation(randomSeed);
 
 		Player mrX = board.getPlayers().stream()
 				.filter(Piece::isMrX)
-				.map(p -> new Player(p, tickets.get(p), randomMrXLocation))
+				.map(p -> new Player(p, tickets.get(p), MrXLocation))
 				.findAny()
 				.orElseThrow();
 
@@ -53,30 +61,45 @@ public class MyAi implements Ai {
 ;//---------------------------------------------------------------------------------------------------------------------------------
 		final DistanceMainCalculator calc = new DistanceMainCalculator(board.getSetup()); //need to have the real class
 		final MiniMax finalmove = new MiniMax(score, calc);
+		/// update current move
 
 
 
 		Move bestmove = null;
 		Integer maxscore = Integer.MIN_VALUE;
-		final int DEPTH = 3;
+		final int DEPTH =setup.moves.size()-NewGameState.roundNum>= 7?7:setup.moves.size()-NewGameState.roundNum;
 		final int ALPHA = Integer.MIN_VALUE;
 		final int BETA = Integer.MAX_VALUE;
 
 
 		for (Move move : board.getAvailableMoves()) {
-			NewGameState currentState = new NewGameState(setup,DetectivePlayer,mrX,travalLog,board.getAvailableMoves(),true,board.getPlayers());
+			NewGameState currentState = new NewGameState(setup,DetectivePlayer,mrX,travalLog,board.getAvailableMoves(),true,board.getPlayers(),NewGameState.roundNum,ImmutableSet.of());
 			NewGameState nextState = currentState.advanceState(move);
 
 			Integer score = finalmove.Minimax(nextState, DEPTH, ALPHA, BETA, true);
+			for (Integer i:nextState.detectiveLocations){
+				if(calc.getdistance(nextState.mrX.location(),i)<=1){
 
+					score+=Integer.MIN_VALUE/10;
+					break;
+				}
+			}
 			if (score > maxscore) {
 				maxscore = score;
 				bestmove = move;
 			}
 		}
-
+		//need to check if this null check is still valid and only happens if all moves wehre equally horrible or is there some other edge case that causes it as well
 		if (bestmove == null) {
 			bestmove = board.getAvailableMoves().iterator().next();
+			System.out.print("Hello ");
+		}
+		System.out.println(maxscore+"roundNum: "+NewGameState.roundNum);
+		NewGameState.UpdateRevealedTravelLog(bestmove);
+		if (bestmove instanceof Move.DoubleMove){
+			NewGameState.roundNum+=2;
+		}else{
+			NewGameState.roundNum+=1;
 		}
 	 return bestmove;
 	}

@@ -11,7 +11,7 @@ import static java.util.stream.Collectors.toList;
 public class ScoreMain implements ScoreInterface {
     
     public Integer score(Player MrX, List<Player> detectives,ImmutableList<LogEntry> travelog,DistanceMainCalculator distancematrix){
-        
+        System.out.println("getting score");
 //        final int MrxLocation = MrX.location();
 //        final List<Integer> detectiveLocations = detectives.stream().map(detl-> detl.location()).toList();
         final int MrxLocation = MrX.location();
@@ -59,11 +59,11 @@ public class ScoreMain implements ScoreInterface {
             totalScore += (MrxNextPosRoutes * 20);
         }
 
-
+        //changed scalar from 20 to 5
         int ticketBonus = 0;
-        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.SECRET, 0) * 20;
-        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.DOUBLE, 0) * 20;
-        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.UNDERGROUND, 0) * 20;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.SECRET, 0) * 5;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.DOUBLE, 0) * 5;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.UNDERGROUND, 0) * 5;
         totalScore += ticketBonus;
 
 
@@ -74,7 +74,9 @@ public class ScoreMain implements ScoreInterface {
         int minDistance = detectiveLocations.stream()
                 .mapToInt(x -> distancematrix.getdistance(MrxLocation, x))
                 .min()
-                .orElse(100);
+                .getAsInt();
+
+        System.out.println("min: " + minDistance);
         if (minDistance < 3) {
             totalScore -= (3 - minDistance) * 30;
         }
@@ -87,7 +89,9 @@ public class ScoreMain implements ScoreInterface {
         //TODO:availible number of transportaion for mrx
 
 
-
+        // one move to a detective no way!!!!
+        // take into account the num of tickekts the detectives has
+        //
         return totalScore;
     };
 }

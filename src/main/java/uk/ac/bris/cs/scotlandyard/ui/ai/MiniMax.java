@@ -30,11 +30,17 @@ public class MiniMax implements MiniMaxInterface {
         ImmutableList<LogEntry> travelLog = currentState.travelLog;
 
 
+        //logic to consider who is playing
+        //mrx max
+        //detectives min
 
+        //look at detectives all of them
         if (depth == 0 || !currentState.winner().isEmpty()) {
             ImmutableSet<Piece> winners = currentState.winner();
             if (!winners.isEmpty()) {
+                System.out.println("yes");
                 if (winners.contains(currentState.mrX.piece())) {
+                    System.out.println("yes");
                     return Integer.MAX_VALUE / 2;
                 } else {
                     return Integer.MIN_VALUE / 2;
@@ -42,6 +48,7 @@ public class MiniMax implements MiniMaxInterface {
             }
             return score.score(mrX, detectives, currentState.travelLog, calc);
         }
+
 
 
         Set<Move> availableMoves = currentState.availableMoves();
@@ -52,18 +59,34 @@ public class MiniMax implements MiniMaxInterface {
 
                 NewGameState nextstate = currentState.advanceState(move);
                 int childScore = Minimax(nextstate,depth - 1, alpha, beta, false);
+                //will need to first see if the particular detective has  the tickets to make the journey!!! need to fix
+                for (Integer i:nextstate.detectiveLocations){
+                    if(calc.getdistance(nextstate.mrX.location(),i)<=1){
+                        childScore+=Integer.MIN_VALUE/15;
+                        break;
+                    }
+                }
+                //is alpha beta pruning actually working here shouldn't it be if beta<=alpha first then make updates to maxscore, i think the order of the following 3 statements need to be changed
                 maxScore = Math.max(maxScore, childScore);
                 alpha = Math.max(alpha, childScore);
                 if (beta <= alpha) {
                     break;
                 }
+                currentState.moves=null;
             }
             return maxScore;
         } else {
             int minScore = Integer.MAX_VALUE;
             for (Move move : availableMoves) {
                 NewGameState nextstate = currentState.advanceState(move);
-                int childScore = Minimax(nextstate, depth - 1, alpha, beta, true);
+                int childScore;
+                if (nextstate.played.isEmpty()){
+                     childScore = Minimax(nextstate, depth - 1, alpha, beta, true);
+                }else{
+                     childScore = Minimax(nextstate, depth - 1, alpha, beta, false);
+                }
+
+                currentState.moves=null;
                 minScore = Math.min(minScore, childScore);
                 beta = Math.min(beta, childScore);
                 if (beta <= alpha) {

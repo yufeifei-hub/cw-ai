@@ -17,21 +17,42 @@ class NewGameState implements NewGameStateInterface{
 
     private ImmutableSet<Piece> currentWinners;
     private ImmutableSet<Piece> remaining = ImmutableSet.of();
-    private ImmutableSet<Move> moves;
+    public ImmutableSet<Move> moves;
 
     private boolean mrxTurn;
+    public Set<Integer> detectiveLocations=new HashSet<>();
+    public static int roundNum=1;
+    public ImmutableSet<Piece> played;
+    public static List<LogEntry> revealedtravelLog=new ArrayList<>();
+    private int minMaxRoundNum;
+    public static void UpdateRevealedTravelLog(Move move){
+        Iterator<ScotlandYard.Ticket> ticketIter = move.tickets().iterator();
+        List<Integer> destination = move.accept(new Move.Visitor<>() {
+            public List<Integer> visit(Move.SingleMove s) { return List.of(s.destination); }
+            public List<Integer> visit(Move.DoubleMove d) { return List.of(d.destination1, d.destination2); }
+        });
+        if (move instanceof Move.DoubleMove) {
+            ScotlandYard.Ticket t1 = ticketIter.next();
+            ScotlandYard.Ticket t2 = ticketIter.next();
+            revealedtravelLog.add(LogEntry.reveal(t1, destination.get(0)));
+            revealedtravelLog.add(LogEntry.reveal(t2, destination.get(1)));
 
-    private static int roundNum=1;
-    private ImmutableSet<Piece> played;
+
+
+        } else {
+            ScotlandYard.Ticket t1 = ticketIter.next();
+            revealedtravelLog.add(LogEntry.reveal(t1, destination.get(0)));
+        }
 
 
 
+    }
     public NewGameState(
             GameSetup setup,
             List<Player> dete,
             Player mrX,
             ImmutableList<LogEntry> travelLog,
-            ImmutableSet<Move> moves,final boolean mrxturn,final ImmutableSet<Piece> played
+            ImmutableSet<Move> moves,final boolean mrxturn,final ImmutableSet<Piece> played,int roundnum,ImmutableSet<Piece> remaining
 
     ){
 
@@ -45,6 +66,12 @@ class NewGameState implements NewGameStateInterface{
         this.currentWinners=winner();
         if (!this.currentWinners.isEmpty()){
             this.moves=ImmutableSet.of();
+        }
+        this.minMaxRoundNum=roundnum;
+        this.remaining=remaining;
+
+        for (Player detective : this.detectives) {
+            this.detectiveLocations.add(detective.location());
         }
     }
     public NewGameState advanceState(Move move) {
@@ -65,7 +92,9 @@ class NewGameState implements NewGameStateInterface{
         ImmutableList<LogEntry> newLog = this.travelLog;
         ImmutableSet<Piece> newPlayed = this.played;
         boolean newMrXTurn = this.mrxTurn;
-        int newRoundNum = this.roundNum;
+        int newRoundNum = this.minMaxRoundNum;
+        Set<Piece> remaining=this.remaining;
+
 
         // 3. apply move depending on who is moving
         if (!mrxTurn) {
@@ -79,7 +108,7 @@ class NewGameState implements NewGameStateInterface{
             int idx = -1;
             Player det = null;
             for (int i = 0; i < newD.size(); i++) {
-                if (newD.get(i).piece().equals(mover)) {
+                if (newD.get(i).piece().webColour().equals(mover.webColour())) {
                     idx = i;
                     det = newD.get(i);
                     break;
@@ -88,25 +117,47 @@ class NewGameState implements NewGameStateInterface{
             if (det == null) {
                 throw new IllegalArgumentException("Move commenced by unknown player: " + mover);
             }
+            if (!newPlayed.contains(det.piece())) {
+                Player newDet = det.at(destination.get(0));
+                Iterable<ScotlandYard.Ticket> ticketsUsed = move.tickets();
+                newMrX = newMrX.give(ticketsUsed);
+                newDet = newDet.use(ticketsUsed);
 
+                newD.set(idx, newDet);
+                newPlayed = ImmutableSet.<Piece>builder()
+                        .addAll(newPlayed)
+                        .add(mover)
+                        .build();
+            }else{
+                throw new IllegalArgumentException("player is moving twice");
+            }
             // Update detective
-            Player newDet = det.at(destination.get(0));
-            Iterable<ScotlandYard.Ticket> ticketsUsed = move.tickets();
-            newMrX = newMrX.give(ticketsUsed);
-            newDet = newDet.use(ticketsUsed);
+            Player finalDet = det;
+            ImmutableSet<Piece> newRemaining = this.remaining.stream()
+                    .filter(piece -> !piece.equals(finalDet.piece()))
+                    .collect(ImmutableSet.toImmutableSet());
+            this.moves=null;
+            ImmutableSet<Move> newmoves=this.availableMoves();
+            if(!newmoves.isEmpty()){
+                this.moves=newmoves;
 
-            newD.set(idx, newDet);
-            newPlayed = ImmutableSet.<Piece>builder()
-                    .addAll(newPlayed)
-                    .add(mover)
-                    .build();
 
-            // Detectives all played? -> switch to MrX turn
-            if (newPlayed.size() == detectives.size()) {
+            }
+            else{
+                this.moves=null;
+                newmoves=null;
+
+            }
+
+
+            if (newRemaining.isEmpty()) {
                 newMrXTurn = true;
                 newPlayed = ImmutableSet.of();
                 newRoundNum++;
+
+
             }
+            return new NewGameState(this.setup,newD,newMrX,newLog,newmoves,newMrXTurn,newPlayed,newRoundNum,newRemaining);
         } else {
             // MrX is moving
             Iterator<ScotlandYard.Ticket> ticketIter = move.tickets().iterator();
@@ -128,16 +179,16 @@ class NewGameState implements NewGameStateInterface{
                         .add(revealThis ? LogEntry.reveal(t1, destination.get(0)) : LogEntry.hidden(t1))
                         .build();
                 newMrX = newMrX.use(t1).at(destination.get(0));
-                newRoundNum += 1;
+
             }
             newMrXTurn = false;
         }
 
         // 4. compute new moves
-        ImmutableSet<Move> newMoves = ImmutableSet.of();  // can recompute later in availableMoves
+        ImmutableSet<Move> newMoves =null;  // can recompute later in availableMoves
 
 
-        return new NewGameState(this.setup, newD, newMrX, newLog, newMoves, newMrXTurn, newPlayed);
+        return new NewGameState(this.setup, newD, newMrX, newLog, newMoves, newMrXTurn, newPlayed,newRoundNum,this.remaining);
     }
 
     public Optional<Board.TicketBoard> playerTickets(Piece piece) {
@@ -173,11 +224,14 @@ class NewGameState implements NewGameStateInterface{
             moves.addAll(makeSingleMoves(setup, detectives, mrX, mrX.location()));
             moves.addAll(makeDoubleMoves(setup, detectives, mrX, mrX.location()));
         } else {
+            ImmutableSet.Builder<Piece> newRemaining= ImmutableSet.<Piece>builder();
             for (Player p : detectives) {
                 if (!played.contains(p.piece())) {
                     moves.addAll(makeSingleMoves(setup, detectives, p, p.location()));
+                    newRemaining.add(p.piece());
                 }
             }
+            this.remaining=newRemaining.build();
         }
 
         this.moves = ImmutableSet.copyOf(moves);  // freeze once
@@ -284,7 +338,7 @@ class NewGameState implements NewGameStateInterface{
         // Check if it’s MrX turn
         if (mrxTurn) {
             ImmutableSet<Move> mrXMoves = availableMoves();
-            if (roundNum == setup.moves.size()) {
+            if (this.minMaxRoundNum == setup.moves.size()) {
                 // Game over, MrX wins
                 return ImmutableSet.of(mrX.piece());
             } else if (mrXMoves.isEmpty()) {
@@ -295,7 +349,11 @@ class NewGameState implements NewGameStateInterface{
             }
         } else {
             // It’s detective turn
-            if (remaining.isEmpty() && played.isEmpty()) {
+            if (this.minMaxRoundNum == setup.moves.size()) {
+                // Game over, MrX wins
+                return ImmutableSet.of(mrX.piece());
+            }
+            if (this.availableMoves().isEmpty() && played.isEmpty()) {
                 // All detectives played; MrX wins
                 return ImmutableSet.of(mrX.piece());
             }

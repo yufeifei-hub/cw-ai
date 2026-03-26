@@ -6,6 +6,7 @@ import uk.ac.bris.cs.scotlandyard.model.GameSetup;
 import uk.ac.bris.cs.scotlandyard.model.ScotlandYard;
 import java.util.Arrays;
 
+import java.util.HashSet;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -38,7 +39,7 @@ public class DistanceMainCalculator implements DistanceCalculator {
         PriorityQueue<Integer[]> pqueue = new PriorityQueue<>((a, b) -> (a[0] - b[0]));// order based on distance, entry a[value,node] and b[value,node]
         matrix[source][source] = 0; // sets source to have distance of 0
         pqueue.add(new Integer[]{0,source}); // add to queue
-
+        Set<Integer> processed = new HashSet<>();
 
         while (!pqueue.isEmpty()){
             Integer[] first = pqueue.poll();//get top item from queue
@@ -46,9 +47,11 @@ public class DistanceMainCalculator implements DistanceCalculator {
             Integer value = first[0];
             Integer node = first[1];
 
-            if (value > matrix[source][node]){ // if the value is greater than the value stored in the matrix for that node
-                continue; // goes back to top of while loop
+            if (value > matrix[source][node] || processed.contains(node)) {
+                continue;
             }
+
+            processed.add(node);
 
             for(Integer adj:graph.adjacentNodes(node)){ // else we look at each of its adjacent nodes
                 int weight = 1; // moving from one node to another has the same weight of one, as only 1 ticket being used
