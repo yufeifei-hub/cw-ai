@@ -68,7 +68,7 @@ public class MyAi implements Ai {
 
 		Move bestmove = null;
 		Integer maxscore = Integer.MIN_VALUE;
-		final int DEPTH =setup.moves.size()-NewGameState.roundNum>= 7?7:setup.moves.size()-NewGameState.roundNum;
+		final int DEPTH =9;//setup.moves.size()-NewGameState.roundNum>= 7?7:setup.moves.size()-NewGameState.roundNum;
 		final int ALPHA = Integer.MIN_VALUE;
 		final int BETA = Integer.MAX_VALUE;
 
@@ -78,13 +78,14 @@ public class MyAi implements Ai {
 			NewGameState nextState = currentState.advanceState(move);
 
 			Integer score = finalmove.Minimax(nextState, DEPTH, ALPHA, BETA, true);
-			for (Integer i:nextState.detectiveLocations){
-				if(calc.getdistance(nextState.mrX.location(),i)<=1){
-
-					score+=Integer.MIN_VALUE/10;
-					break;
-				}
-			}
+			System.out.println("this is the score"+score);
+//			for (Integer i:nextState.detectiveLocations){
+//				if(calc.getdistance(nextState.mrX.location(),i)<=1){
+//
+//					score+=-100;
+//					break;
+//				}
+//			}
 			if (score > maxscore) {
 				maxscore = score;
 				bestmove = move;
@@ -93,7 +94,7 @@ public class MyAi implements Ai {
 		//need to check if this null check is still valid and only happens if all moves wehre equally horrible or is there some other edge case that causes it as well
 		if (bestmove == null) {
 			bestmove = board.getAvailableMoves().iterator().next();
-			System.out.print("Hello ");
+
 		}
 		System.out.println(maxscore+"roundNum: "+NewGameState.roundNum);
 		NewGameState.UpdateRevealedTravelLog(bestmove);

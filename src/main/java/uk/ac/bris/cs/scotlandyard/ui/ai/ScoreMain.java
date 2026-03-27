@@ -34,14 +34,14 @@ public class ScoreMain implements ScoreInterface {
         int totalScore = 0;
 
         if (avarageDistance < 2 && isRvealRound){
-            totalScore += Integer.MIN_VALUE / 2; // he is likely to be surrounded as the avarage suggest that many are around 2 nodes away.
+            totalScore += -100; // he is likely to be surrounded as the avarage suggest that many are around 2 nodes away.
             //high penalty
         } else if (avarageDistance > 2 && isRvealRound) {
-            totalScore += avarageDistance * -100;
+            totalScore += avarageDistance * -1;
         } else if (avarageDistance > 2 && !isRvealRound) {
-            totalScore += avarageDistance * 10;
+            totalScore += avarageDistance * 4;
         } else {
-            totalScore += -200;
+            totalScore += -2;
         }
 
 
@@ -52,18 +52,18 @@ public class ScoreMain implements ScoreInterface {
                 .filter(x -> distancematrix.getdistance(MrxLocation, x) < 2)
                 .count();
         if(count == MrxNextPosRoutes){
-            totalScore += Integer.MIN_VALUE / 2;
+            totalScore += -100;
         } else if (count < MrxNextPosRoutes && isRvealRound) {
-            totalScore += (MrxNextPosRoutes * 10);
+            totalScore += (MrxNextPosRoutes * 2);
         } else if (count < MrxNextPosRoutes && !isRvealRound) {
-            totalScore += (MrxNextPosRoutes * 20);
+            totalScore += (MrxNextPosRoutes * 3);
         }
 
         //changed scalar from 20 to 5
         int ticketBonus = 0;
-        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.SECRET, 0) * 5;
-        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.DOUBLE, 0) * 5;
-        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.UNDERGROUND, 0) * 5;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.SECRET, 0) * 2;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.DOUBLE, 0) * 2;
+        ticketBonus += MrX.tickets().getOrDefault(ScotlandYard.Ticket.UNDERGROUND, 0) * 2;
         totalScore += ticketBonus;
 
 
@@ -78,7 +78,7 @@ public class ScoreMain implements ScoreInterface {
 
         System.out.println("min: " + minDistance);
         if (minDistance < 3) {
-            totalScore -= (3 - minDistance) * 30;
+            totalScore -= (3 - minDistance) * 3;
         }
 
         //TODO: has underground exit
