@@ -69,7 +69,7 @@ public class MyAi implements Ai {
 
 		Move bestmove = null;
 		Integer maxscore = Integer.MIN_VALUE;
-		final int DEPTH =setup.moves.size()-NewGameState.roundNum>= 3?3:setup.moves.size()-NewGameState.roundNum;
+		final int DEPTH =3;
 		final int ALPHA = Integer.MIN_VALUE;
 		final int BETA = Integer.MAX_VALUE;
 

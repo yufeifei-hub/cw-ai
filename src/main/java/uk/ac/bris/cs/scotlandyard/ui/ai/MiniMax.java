@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import uk.ac.bris.cs.scotlandyard.model.*;
 
 import javax.annotation.Nonnull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -52,6 +53,7 @@ public class MiniMax implements MiniMaxInterface {
 
 
 
+        //List<Move> availableMoves = sortMoves(currentState.availableMoves(), currentState);
         Set<Move> availableMoves = currentState.availableMoves();
 //        System.out.println("depth"+availableMoves.size());
         if (ismrx) {
@@ -97,4 +99,9 @@ public class MiniMax implements MiniMaxInterface {
             return minScore;
         }
     }
+
+
+
+
+
 }

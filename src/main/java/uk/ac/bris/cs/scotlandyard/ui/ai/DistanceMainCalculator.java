@@ -77,5 +77,13 @@ public class DistanceMainCalculator implements DistanceCalculator {
         return matrix[source][destination]; // gets shortest distance from specific source to destination
     }
 
+    public Set<ScotlandYard.Transport> getAvailableTransportModes(int location) {
+        Set<ScotlandYard.Transport> modes = new HashSet<>();
+        for (Integer neighbor : graphAcesss.adjacentNodes(location)) {
+            modes.addAll(graphAcesss.edgeValue(location, neighbor).get());
+        }
+        return modes;
+    }
+
 
 }
