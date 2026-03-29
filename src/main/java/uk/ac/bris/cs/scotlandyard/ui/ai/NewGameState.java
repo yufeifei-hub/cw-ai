@@ -71,6 +71,8 @@ class NewGameState implements NewGameStateInterface{
         this.minMaxRoundNum=roundnum;
         this.remaining=remaining;
 
+
+
         for (Player detective : this.detectives) {
             this.detectiveLocations.add(detective.location());
         }
