@@ -35,20 +35,20 @@ public class MiniMax implements MiniMaxInterface {
         //mrx max
         //detectives min
 
-        //look at detectives all of them
-//        if (depth == 0 || !currentState.winner().isEmpty()) {
-//            ImmutableSet<Piece> winners = currentState.winner();
-//            if (!winners.isEmpty()) {
-//
-//                if (winners.contains(currentState.mrX.piece())) {
-//
-//                    return 100;
-//                } else {
-//                    return 100;
-//                }
-//            }
-//            return score.score(mrX, detectives, currentState.travelLog, calc);
-//        }
+
+        if (depth == 0 || !currentState.winner().isEmpty()) {
+            ImmutableSet<Piece> winners = currentState.winner();
+            if (!winners.isEmpty()) {
+
+                if (winners.contains(currentState.mrX.piece())) {
+
+                    return 100;
+                } else {
+                    return 100;
+                }
+            }
+            return score.score(mrX, detectives, currentState.travelLog, calc);
+        }
 
         if (depth == 0) {
 
@@ -66,21 +66,21 @@ public class MiniMax implements MiniMaxInterface {
                 NewGameState nextstate = currentState.advanceState(move);
                 int childScore = Minimax(nextstate,depth - 1, alpha, beta, false);
 
-                //will need to first see if the particular detective has  the tickets to make the journey!!! need to fix
-//                for (Integer i:nextstate.detectiveLocations){ //WHY CHECKING DETECTIVE LOCATION HERE
-//                    if(calc.getdistance(nextstate.mrX.location(),i)<=1){
-//                        childScore+=Integer.MIN_VALUE/15;
-//                        break;
-//                    }
-//                }
-                //is alpha beta pruning actually working here shouldn't it be if beta<=alpha first then make updates to maxscore, i think the order of the following 3 statements need to be changed
+
+                for (Integer i:nextstate.detectiveLocations){ //WHY CHECKING DETECTIVE LOCATION HERE
+                    if(calc.getdistance(nextstate.mrX.location(),i)<=1){
+                        childScore+=Integer.MIN_VALUE/15;
+                        break;
+                    }
+                }
+
                 maxScore = Math.max(maxScore, childScore);
 
                 alpha = Math.max(alpha, childScore);
                 if (beta <= alpha) {
                     break;
                 }
-                //currentState.moves=null; // WHY ADD THIS
+                currentState.moves=null; // WHY ADD THIS
             }
             return maxScore;
         } else {
@@ -89,14 +89,14 @@ public class MiniMax implements MiniMaxInterface {
             for (Move move : availableMoves) {
                 NewGameState nextstate = currentState.advanceState(move);
                 int childScore;
-//                if (nextstate.played.isEmpty()){ // WHAT IS THE PURPOSE OF THIS
+                if (nextstate.played.isEmpty()){ // WHAT IS THE PURPOSE OF THIS
                      childScore = Minimax(nextstate, depth - 1, alpha, beta, true);
                 System.out.println("this is child score"+childScore);
-//                }else{
-//                     childScore = Minimax(nextstate, depth - 1, alpha, beta, false);
-//                }
+                }else{
+                     childScore = Minimax(nextstate, depth - 1, alpha, beta, false);
+                }
 
-                //currentState.moves=null;// WHY
+                currentState.moves=null;// WHY
                 minScore = Math.min(minScore, childScore);
                 beta = Math.min(beta, childScore);
                 if (beta <= alpha) {

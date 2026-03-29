@@ -12,7 +12,6 @@ import io.atlassian.fugue.Option;
 import jakarta.annotation.Nonnull;
 import io.atlassian.fugue.Pair;
 import uk.ac.bris.cs.scotlandyard.model.*;
-import uk.ac.bris.cs.scotlandyard.ui.model.PlayerProperty;
 
 public class MyAi implements Ai {
 
@@ -36,12 +35,14 @@ public class MyAi implements Ai {
 				.map(Piece.Detective.class::cast)
 				.collect(ImmutableMap.toImmutableMap(Function.identity(),
 						x1 -> board.getDetectiveLocation(x1).orElseThrow())));
-
+		ImmutableSet<Move> movesToLoop=board.getAvailableMoves();
 		List<Player> DetectivePlayer = detectiveLocations.keySet().stream().map(d->new Player(d,tickets.get(d),detectiveLocations.get(d))).toList();
+//		System.out.println("hola"+DetectivePlayer.size());
 		int MrXLocation;
 		if(board.getMrXTravelLog().isEmpty()){
-			int randomSeed = (int) System.currentTimeMillis();
-			MrXLocation = ScotlandYard.generateMrXLocation(randomSeed);
+			Move first_move = movesToLoop.iterator().next();
+			MrXLocation=first_move.source();
+
 		}else{
 			Optional<Integer> MrXLocationtoUpdate =
 					NewGameState.revealedtravelLog.get(NewGameState.revealedtravelLog.size() - 1).location();
@@ -59,7 +60,7 @@ public class MyAi implements Ai {
 
 		ImmutableList<LogEntry> travalLog = board.getMrXTravelLog();
 		GameSetup setup = board.getSetup();
-;//---------------------------------------------------------------------------------------------------------------------------------
+		;//---------------------------------------------------------------------------------------------------------------------------------
 		final DistanceMainCalculator calc = new DistanceMainCalculator(board.getSetup()); //need to have the real class
 		final MiniMax finalmove = new MiniMax(score, calc);
 		/// update current move
@@ -68,24 +69,24 @@ public class MyAi implements Ai {
 
 		Move bestmove = null;
 		Integer maxscore = Integer.MIN_VALUE;
-		final int DEPTH =9;//setup.moves.size()-NewGameState.roundNum>= 7?7:setup.moves.size()-NewGameState.roundNum;
+		final int DEPTH =setup.moves.size()-NewGameState.roundNum>= 3?3:setup.moves.size()-NewGameState.roundNum;
 		final int ALPHA = Integer.MIN_VALUE;
 		final int BETA = Integer.MAX_VALUE;
 
 
-		for (Move move : board.getAvailableMoves()) {
-			NewGameState currentState = new NewGameState(setup,DetectivePlayer,mrX,travalLog,board.getAvailableMoves(),true,board.getPlayers(),NewGameState.roundNum,ImmutableSet.of());
+		for (Move move :movesToLoop) {
+
+			NewGameState currentState = new NewGameState(setup,DetectivePlayer,mrX,travalLog,movesToLoop,true,ImmutableSet.of(),NewGameState.roundNum,ImmutableSet.of());
 			NewGameState nextState = currentState.advanceState(move);
 
-			Integer score = finalmove.Minimax(nextState, DEPTH, ALPHA, BETA, true);
-			System.out.println("this is the score"+score);
-//			for (Integer i:nextState.detectiveLocations){
-//				if(calc.getdistance(nextState.mrX.location(),i)<=1){
-//
-//					score+=-100;
-//					break;
-//				}
-//			}
+			Integer score = finalmove.Minimax(nextState, DEPTH, ALPHA, BETA, false);
+			for (Integer i:nextState.detectiveLocations){
+				if(calc.getdistance(nextState.mrX.location(),i)<=1){
+
+					score+=Integer.MIN_VALUE/10;
+					break;
+				}
+			}
 			if (score > maxscore) {
 				maxscore = score;
 				bestmove = move;
@@ -94,7 +95,7 @@ public class MyAi implements Ai {
 		//need to check if this null check is still valid and only happens if all moves wehre equally horrible or is there some other edge case that causes it as well
 		if (bestmove == null) {
 			bestmove = board.getAvailableMoves().iterator().next();
-
+			System.out.print("Hello ");
 		}
 		System.out.println(maxscore+"roundNum: "+NewGameState.roundNum);
 		NewGameState.UpdateRevealedTravelLog(bestmove);
@@ -103,6 +104,6 @@ public class MyAi implements Ai {
 		}else{
 			NewGameState.roundNum+=1;
 		}
-	 return bestmove;
+		return bestmove;
 	}
 }
