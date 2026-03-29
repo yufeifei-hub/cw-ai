@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableSet;
 import jakarta.annotation.Nonnull;
 import uk.ac.bris.cs.scotlandyard.model.*;
 
+import javax.annotation.concurrent.Immutable;
 import java.util.*;
 
 
@@ -19,7 +20,7 @@ class NewGameState implements NewGameStateInterface{
     private ImmutableSet<Piece> remaining = ImmutableSet.of();
     public ImmutableSet<Move> moves;
 
-    private boolean mrxTurn;
+    public boolean mrxTurn;
     public Set<Integer> detectiveLocations=new HashSet<>();
     public static int roundNum=1;
     public ImmutableSet<Piece> played;
@@ -74,6 +75,7 @@ class NewGameState implements NewGameStateInterface{
             this.detectiveLocations.add(detective.location());
         }
     }
+    //TODO: need to account for played as well;
     public NewGameState advanceState(Move move) {
         ImmutableSet<Move> legalMoves = availableMoves();
         if (!legalMoves.contains(move)) {
@@ -137,14 +139,22 @@ class NewGameState implements NewGameStateInterface{
                     .filter(piece -> !piece.equals(finalDet.piece()))
                     .collect(ImmutableSet.toImmutableSet());
             this.moves=null;
+            List<Player> oldDet=this.detectives;
+            this.detectives=newD;
+            ImmutableSet<Piece> oldrem=this.remaining;
+            ImmutableSet<Piece> oldPlayed=this.played;
+            this.played=newPlayed;
             ImmutableSet<Move> newmoves=this.availableMoves();
+            this.detectives=oldDet;
+            this.remaining=oldrem;
+            this.played=oldPlayed;
             if(!newmoves.isEmpty()){
-                this.moves=newmoves;
+//                this.moves=newmoves;
 
 
             }
             else{
-                this.moves=null;
+//                this.moves=null;
                 newmoves=null;
 
             }
@@ -234,8 +244,8 @@ class NewGameState implements NewGameStateInterface{
             this.remaining=newRemaining.build();
         }
 
-        this.moves = ImmutableSet.copyOf(moves);  // freeze once
-        return this.moves;
+        return ImmutableSet.copyOf(moves);  // freeze once
+//        return this.moves;
     }
     private Set<Move.DoubleMove> makeDoubleMoves(GameSetup setup, List<Player> detectives, Player player, int source){
         List<Integer> detectiveLocations = this.detectives.stream().map(p->p.location()).toList();

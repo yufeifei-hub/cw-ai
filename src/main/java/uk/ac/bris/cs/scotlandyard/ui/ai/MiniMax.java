@@ -46,13 +46,14 @@ public class MiniMax implements MiniMaxInterface {
                     return Integer.MIN_VALUE / 2;
                 }
             }
+
             return score.score(mrX, detectives, currentState.travelLog, calc);
         }
 
 
 
         Set<Move> availableMoves = currentState.availableMoves();
-
+//        System.out.println("depth"+availableMoves.size());
         if (ismrx) {
             int maxScore = Integer.MIN_VALUE;
             for (Move move : availableMoves) {
@@ -80,7 +81,7 @@ public class MiniMax implements MiniMaxInterface {
             for (Move move : availableMoves) {
                 NewGameState nextstate = currentState.advanceState(move);
                 int childScore;
-                if (nextstate.played.isEmpty()){
+                if (nextstate.mrxTurn){
                      childScore = Minimax(nextstate, depth - 1, alpha, beta, true);
                 }else{
                      childScore = Minimax(nextstate, depth - 1, alpha, beta, false);
