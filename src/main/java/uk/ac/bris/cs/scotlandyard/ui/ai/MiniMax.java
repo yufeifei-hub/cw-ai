@@ -62,7 +62,7 @@ public class MiniMax implements MiniMaxInterface {
         if (ismrx) {
             int maxScore = Integer.MIN_VALUE;
             for (Move move : availableMoves) {
-                System.out.println("inside mrx");
+
                 NewGameState nextstate = currentState.advanceState(move);
                 int childScore = Minimax(nextstate,depth - 1, alpha, beta, false);
 
@@ -84,14 +84,14 @@ public class MiniMax implements MiniMaxInterface {
             }
             return maxScore;
         } else {
-            System.out.println("inside detective");
+
             int minScore = Integer.MAX_VALUE;
             for (Move move : availableMoves) {
                 NewGameState nextstate = currentState.advanceState(move);
                 int childScore;
                 if (nextstate.played.isEmpty()){ // WHAT IS THE PURPOSE OF THIS
                      childScore = Minimax(nextstate, depth - 1, alpha, beta, true);
-                System.out.println("this is child score"+childScore);
+
                 }else{
                      childScore = Minimax(nextstate, depth - 1, alpha, beta, false);
                 }
