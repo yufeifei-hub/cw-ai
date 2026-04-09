@@ -22,6 +22,7 @@ public class MyAi implements Ai {
 	@Nonnull @Override public Move pickMove(@Nonnull Board board, Pair<Long, TimeUnit> timeoutPair) {
 //---------------------------------------------------------------------------------------------------------------------------------
 
+
 		ImmutableMap<Piece, ImmutableMap<ScotlandYard.Ticket, Integer>> tickets = Objects.requireNonNull(
 				board.getPlayers().stream().collect(ImmutableMap.toImmutableMap(
 						Function.identity(), x -> {
@@ -35,14 +36,12 @@ public class MyAi implements Ai {
 				.map(Piece.Detective.class::cast)
 				.collect(ImmutableMap.toImmutableMap(Function.identity(),
 						x1 -> board.getDetectiveLocation(x1).orElseThrow())));
-		ImmutableSet<Move> movesToLoop=board.getAvailableMoves();
+
 		List<Player> DetectivePlayer = detectiveLocations.keySet().stream().map(d->new Player(d,tickets.get(d),detectiveLocations.get(d))).toList();
-//		System.out.println("hola"+DetectivePlayer.size());
 		int MrXLocation;
 		if(board.getMrXTravelLog().isEmpty()){
-			Move first_move = movesToLoop.iterator().next();
-			MrXLocation=first_move.source();
-
+			int randomSeed = (int) System.currentTimeMillis();
+			MrXLocation = ScotlandYard.generateMrXLocation(randomSeed);
 		}else{
 			Optional<Integer> MrXLocationtoUpdate =
 					NewGameState.revealedtravelLog.get(NewGameState.revealedtravelLog.size() - 1).location();
@@ -60,38 +59,41 @@ public class MyAi implements Ai {
 
 		ImmutableList<LogEntry> travalLog = board.getMrXTravelLog();
 		GameSetup setup = board.getSetup();
-		;//---------------------------------------------------------------------------------------------------------------------------------
+;//---------------------------------------------------------------------------------------------------------------------------------
 		final DistanceMainCalculator calc = new DistanceMainCalculator(board.getSetup()); //need to have the real class
 		final MiniMax finalmove = new MiniMax(score, calc);
+		MctsSearch mcts = new MctsSearch(finalmove, score, calc);
 		/// update current move
 
 
 
-		Move bestmove = null;
+//		Move bestmove = null;
 		Integer maxscore = Integer.MIN_VALUE;
-		final int DEPTH =3;
-		final int ALPHA = Integer.MIN_VALUE;
-		final int BETA = Integer.MAX_VALUE;
+//		final int DEPTH =setup.moves.size()-NewGameState.roundNum>= 7?7:setup.moves.size()-NewGameState.roundNum;
+//		final int ALPHA = Integer.MIN_VALUE;
+//		final int BETA = Integer.MAX_VALUE;
 
 
-		for (Move move :movesToLoop) {
+//		for (Move move : board.getAvailableMoves()) {
+//			NewGameState currentState = new NewGameState(setup,DetectivePlayer,mrX,travalLog,board.getAvailableMoves(),true,board.getPlayers(),NewGameState.roundNum,ImmutableSet.of());
+//			NewGameState nextState = currentState.advanceState(move);
+//
+//			Integer score = finalmove.Minimax(nextState, DEPTH, ALPHA, BETA, true);
+//			for (Integer i:nextState.detectiveLocations){
+//				if(calc.getdistance(nextState.mrX.location(),i)<=1){
+//
+//					score+=Integer.MIN_VALUE/10;
+//					break;
+//				}
+//			}
+//			if (score > maxscore) {
+//				maxscore = score;
+//				bestmove = move;
+//			}
+//		}
+		NewGameState rootState = new NewGameState(setup,DetectivePlayer,mrX,travalLog,board.getAvailableMoves(),true,board.getPlayers(),NewGameState.roundNum,ImmutableSet.of());
+		Move bestmove = mcts.getBestMove(rootState, 2000);
 
-			NewGameState currentState = new NewGameState(setup,DetectivePlayer,mrX,travalLog,movesToLoop,true,ImmutableSet.of(),NewGameState.roundNum,ImmutableSet.of());
-			NewGameState nextState = currentState.advanceState(move);
-
-			Integer score = finalmove.Minimax(nextState, DEPTH, ALPHA, BETA, false);
-			for (Integer i:nextState.detectiveLocations){
-				if(calc.getdistance(nextState.mrX.location(),i)<=1){
-
-					score+=Integer.MIN_VALUE/10;
-					break;
-				}
-			}
-			if (score > maxscore) {
-				maxscore = score;
-				bestmove = move;
-			}
-		}
 		//need to check if this null check is still valid and only happens if all moves wehre equally horrible or is there some other edge case that causes it as well
 		if (bestmove == null) {
 			bestmove = board.getAvailableMoves().iterator().next();
@@ -104,6 +106,6 @@ public class MyAi implements Ai {
 		}else{
 			NewGameState.roundNum+=1;
 		}
-		return bestmove;
+	 return bestmove;
 	}
 }

@@ -1,0 +1,103 @@
+package uk.ac.bris.cs.scotlandyard.ui.ai;
+
+import uk.ac.bris.cs.scotlandyard.model.Move;
+import java.util.Comparator;
+import java.util.NoSuchElementException;
+
+public class MctsSearch {
+    private final MiniMax miniMax; //here we use minimax for simulation
+    private final ScoreMain scoreMain;
+    private final DistanceCalculator distanceCalculator;
+
+    public MctsSearch (MiniMax miniMax, ScoreMain scoreMain, DistanceCalculator distanceCalculator) {
+        this.miniMax = miniMax;
+        this.scoreMain = scoreMain;
+        this.distanceCalculator = distanceCalculator;
+    }
+
+    //pick the best move based on the current state
+    public Move getBestMove(NewGameState rootState, int iterations) {
+        MctsNode rootNode = new MctsNode(rootState, null, null);
+
+        //MCTS tree
+        for (int i = 0; i < iterations; i++) {
+            MctsNode selectedNode = select(rootNode);
+            MctsNode expandedNode = expand(selectedNode);
+            int simulationResult = rollout(expandedNode.state);
+            backpropagate(expandedNode, simulationResult);
+        }
+        return getBestChild(rootNode).move;
+    }
+
+    //selection
+    private MctsNode select(MctsNode node) {
+        if (!node.fullyExpanded() || node.state.availableMoves().isEmpty()) {
+            return node;
+        }
+
+        // choose the node based on UCB
+        return node.children.stream()
+                .max(Comparator.comparingDouble(this::calculateUCB))
+                .map(this::select)
+                .orElse(node);
+    }
+
+    //expansion
+    private MctsNode expand(MctsNode node) {
+        var availableMoves = node.state.availableMoves();
+
+        // choose the first move we haven't tried
+        for (Move move : availableMoves) {
+            boolean exists = node.children.stream()
+                    .anyMatch(child -> child.move.equals(move));
+            if (!exists) {
+                NewGameState nextState = node.state.advanceState(move);
+                MctsNode newNode = new MctsNode(nextState, move, node);
+                node.children.add(newNode);
+                return newNode;
+            }
+        }
+        return node;
+    }
+
+    //rollout(simulation with our minimax)
+    private int rollout(NewGameState state) {
+        int fixedDepth = 7;
+        return miniMax.Minimax(
+                state,
+                fixedDepth,
+                Integer.MIN_VALUE,
+                Integer.MAX_VALUE,
+                state.isMrxTurn()
+        );
+    }
+
+    //backpropagation
+    private void backpropagate(MctsNode node, int result) {
+        MctsNode current = node;
+        while (current != null) {
+            current.visitCount++;
+            current.totalScore += result;
+            current = current.parent;
+        }
+    }
+
+    //our UCB
+    private double calculateUCB(MctsNode node) {
+        if (node.visitCount == 0) {
+            return Double.POSITIVE_INFINITY;
+        }
+        double exploitation = node.totalScore / node.visitCount;
+        double exploration = Math.sqrt(Math.log(node.parent.visitCount) / node.visitCount);
+        return exploitation + 1.0 * exploration;
+    }
+
+    //choose the move with the highest score
+    private MctsNode getBestChild(MctsNode rootNode) {
+        return rootNode.children.stream()
+                .max(Comparator.comparingDouble(child ->
+                        (double) child.totalScore / child.visitCount
+                ))
+                .orElseThrow(() -> new NoSuchElementException("No available moves"));
+    }
+}
