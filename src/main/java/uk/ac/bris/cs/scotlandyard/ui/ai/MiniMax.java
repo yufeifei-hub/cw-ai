@@ -42,19 +42,15 @@ public class MiniMax implements MiniMaxInterface {
 
                 if (winners.contains(currentState.mrX.piece())) {
 
-                    return 100;
+                    return Integer.MAX_VALUE;
                 } else {
-                    return 100;
+                    return Integer.MIN_VALUE;
                 }
             }
             return score.score(mrX, detectives, currentState.travelLog, calc);
         }
 
-        if (depth == 0) {
 
-
-            return score.score(mrX, detectives, currentState.travelLog, calc);
-        }
 
         Set<Move> availableMoves = currentState.availableMoves();
         System.out.println(availableMoves);
