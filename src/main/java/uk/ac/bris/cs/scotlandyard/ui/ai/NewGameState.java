@@ -145,14 +145,22 @@ class NewGameState implements NewGameStateInterface{
                     .filter(piece -> !piece.equals(finalDet.piece()))
                     .collect(ImmutableSet.toImmutableSet());
             this.moves=null;
+            List<Player> oldDet=this.detectives;
+            this.detectives=newD;
+            ImmutableSet<Piece> oldrem=this.remaining;
+            ImmutableSet<Piece> oldPlayed=this.played;
+            this.played=newPlayed;
             ImmutableSet<Move> newmoves=this.availableMoves();
+            this.detectives=oldDet;
+            this.remaining=oldrem;
+            this.played=oldPlayed;
             if(!newmoves.isEmpty()){
-                this.moves=newmoves;
+//                this.moves=newmoves;
 
 
             }
             else{
-                this.moves=null;
+//                this.moves=null;
                 newmoves=null;
 
             }
@@ -198,6 +206,144 @@ class NewGameState implements NewGameStateInterface{
 
         return new NewGameState(this.setup, newD, newMrX, newLog, newMoves, newMrXTurn, newPlayed,newRoundNum,this.remaining);
     }
+
+//    public Optional<Board.TicketBoard> playerTickets(Piece piece) {
+//
+//        if (piece.equals(mrX.piece())) {
+//            return Optional.of(new Board.TicketBoard() {
+//                public int getCount(@Nonnull ScotlandYard.Ticket ticket) {
+//                    return mrX.tickets().getOrDefault(ticket, 0);
+//                }
+//            });
+//        }
+//
+//        for (Player detective : detectives) {
+//            if (detective.piece().equals(piece)) {
+//                return Optional.of(new Board.TicketBoard() {
+//                    public int getCount(@Nonnull ScotlandYard.Ticket ticket) {
+//                        return detective.tickets().getOrDefault(ticket, 0);
+//                    }
+//                });
+//            }
+//        }
+//        return Optional.empty();
+//    }
+//    public NewGameState advanceState(Move move) {
+//        ImmutableSet<Move> legalMoves = availableMoves();
+//        if (!legalMoves.contains(move)) {
+//            throw new IllegalArgumentException("Illegal move: " + move);
+//        }
+//
+//        // 1. get destination
+//        List<Integer> destination = move.accept(new Move.Visitor<>() {
+//            public List<Integer> visit(Move.SingleMove s) { return List.of(s.destination); }
+//            public List<Integer> visit(Move.DoubleMove d) { return List.of(d.destination1, d.destination2); }
+//        });
+//
+//        // 2. copy current state attributes
+//        List<Player> newD = new ArrayList<>(this.detectives);
+//        Player newMrX = this.mrX;
+//        ImmutableList<LogEntry> newLog = this.travelLog;
+//        ImmutableSet<Piece> newPlayed = this.played;
+//        boolean newMrXTurn = this.mrxTurn;
+//        int newRoundNum = this.minMaxRoundNum;
+//        Set<Piece> remaining=this.remaining;
+//
+//
+//        // 3. apply move depending on who is moving
+//        if (!mrxTurn) {
+//            // A detective is moving
+//            Piece mover = move.commencedBy();
+//            if (newPlayed.contains(mover)) {
+//                throw new IllegalArgumentException("Detective already moved this round: " + mover);
+//            }
+//
+//            // Find the detective
+//            int idx = -1;
+//            Player det = null;
+//            for (int i = 0; i < newD.size(); i++) {
+//                if (newD.get(i).piece().webColour().equals(mover.webColour())) {
+//                    idx = i;
+//                    det = newD.get(i);
+//                    break;
+//                }
+//            }
+//            if (det == null) {
+//                throw new IllegalArgumentException("Move commenced by unknown player: " + mover);
+//            }
+//            if (!newPlayed.contains(det.piece())) {
+//                Player newDet = det.at(destination.get(0));
+//                Iterable<ScotlandYard.Ticket> ticketsUsed = move.tickets();
+//                newMrX = newMrX.give(ticketsUsed);
+//                newDet = newDet.use(ticketsUsed);
+//
+//                newD.set(idx, newDet);
+//                newPlayed = ImmutableSet.<Piece>builder()
+//                        .addAll(newPlayed)
+//                        .add(mover)
+//                        .build();
+//            }else{
+//                throw new IllegalArgumentException("player is moving twice");
+//            }
+//            // Update detective
+//            Player finalDet = det;
+//            ImmutableSet<Piece> newRemaining = this.remaining.stream()
+//                    .filter(piece -> !piece.equals(finalDet.piece()))
+//                    .collect(ImmutableSet.toImmutableSet());
+//            this.moves=null;
+//            ImmutableSet<Move> newmoves=this.availableMoves();
+//            if(!newmoves.isEmpty()){
+//                this.moves=newmoves;
+//
+//
+//            }
+//            else{
+//                this.moves=null;
+//                newmoves=null;
+//
+//            }
+//
+//
+//            if (newRemaining.isEmpty()) {
+//                newMrXTurn = true;
+//                newPlayed = ImmutableSet.of();
+//                newRoundNum++;
+//
+//
+//            }
+//            return new NewGameState(this.setup,newD,newMrX,newLog,newmoves,newMrXTurn,newPlayed,newRoundNum,newRemaining);
+//        } else {
+//            // MrX is moving
+//            Iterator<ScotlandYard.Ticket> ticketIter = move.tickets().iterator();
+//            if (move instanceof Move.DoubleMove) {
+//                ScotlandYard.Ticket t1 = ticketIter.next();
+//                ScotlandYard.Ticket t2 = ticketIter.next();
+//                newLog = ImmutableList.<LogEntry>builder()
+//                        .addAll(newLog)
+//                        .add(setup.moves.get(newRoundNum - 1) ? LogEntry.reveal(t1, destination.get(0)) : LogEntry.hidden(t1))
+//                        .add(setup.moves.get(newRoundNum) ? LogEntry.reveal(t2, destination.get(1)) : LogEntry.hidden(t2))
+//                        .build();
+//                newMrX = newMrX.use(t1).use(t2).at(destination.get(1)).use(ScotlandYard.Ticket.DOUBLE).at(destination.get(1));
+//                newRoundNum += 1;
+//            } else {
+//                ScotlandYard.Ticket t1 = ticketIter.next();
+//                boolean revealThis = setup.moves.get(newRoundNum);
+//                newLog = ImmutableList.<LogEntry>builder()
+//                        .addAll(newLog)
+//                        .add(revealThis ? LogEntry.reveal(t1, destination.get(0)) : LogEntry.hidden(t1))
+//                        .build();
+//                newMrX = newMrX.use(t1).at(destination.get(0));
+//
+//            }
+//            newMrXTurn = false;
+//        }
+//
+//        // 4. compute new moves
+//        ImmutableSet<Move> newMoves =null;  // can recompute later in availableMoves
+//
+//
+//        return new NewGameState(this.setup, newD, newMrX, newLog, newMoves, newMrXTurn, newPlayed,newRoundNum,this.remaining);
+//    }
 
     public Optional<Board.TicketBoard> playerTickets(Piece piece) {
 
