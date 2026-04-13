@@ -69,7 +69,7 @@ public class MyAi implements Ai {
 
 		Move bestmove = null;
 		Integer maxscore = Integer.MIN_VALUE;
-		final int DEPTH =3;
+		final int DEPTH =7;
 		final int ALPHA = Integer.MIN_VALUE;
 		final int BETA = Integer.MAX_VALUE;
 
