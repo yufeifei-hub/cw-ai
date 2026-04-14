@@ -23,7 +23,7 @@ public class MiniMax implements MiniMaxInterface {
 
     @Override
     public Integer Minimax( NewGameState currentState, Integer depth, Integer alpha, Integer beta, boolean ismrx) {
-        System.out.println(ismrx);
+//        System.out.println(ismrx);
         List<Player> detectives =currentState.detectives;
 
         Player mrX = currentState.mrX;
@@ -52,8 +52,8 @@ public class MiniMax implements MiniMaxInterface {
 
 
 
-        Set<Move> availableMoves = currentState.availableMoves();
-        System.out.println(availableMoves);
+        Set<Move> availableMoves = currentState.statelessAvailableMoves(currentState.played);
+        System.out.println(availableMoves.size());
 
         if (ismrx) {
             int maxScore = Integer.MIN_VALUE;

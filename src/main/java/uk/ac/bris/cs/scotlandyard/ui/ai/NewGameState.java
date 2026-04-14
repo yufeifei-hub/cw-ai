@@ -24,6 +24,7 @@ class NewGameState implements NewGameStateInterface{
     private ImmutableSet<Piece> remaining = ImmutableSet.of();
     public ImmutableSet<Move> moves;
 
+    private ImmutableSet<Piece> remainingdummy = ImmutableSet.of();
     private boolean mrxTurn;
     public boolean isMrxTurn() {
         return this.mrxTurn;
@@ -83,7 +84,7 @@ class NewGameState implements NewGameStateInterface{
         }
     }
     public NewGameState advanceState(Move move) {
-        ImmutableSet<Move> legalMoves = availableMoves();
+        ImmutableSet<Move> legalMoves = statelessAvailableMoves(this.played);
         if (!legalMoves.contains(move)) {
             throw new IllegalArgumentException("Illegal move: " + move);
         }
@@ -151,6 +152,7 @@ class NewGameState implements NewGameStateInterface{
             ImmutableSet<Piece> oldPlayed=this.played;
             this.played=newPlayed;
             ImmutableSet<Move> newmoves=this.availableMoves();
+            newRemaining=this.remaining;//TODO: this may breakk the code need to check
             this.detectives=oldDet;
             this.remaining=oldrem;
             this.played=oldPlayed;
@@ -167,6 +169,7 @@ class NewGameState implements NewGameStateInterface{
 
 
             if (newRemaining.isEmpty()) {
+                newmoves=null;
                 newMrXTurn = true;
                 newPlayed = ImmutableSet.of();
                 newRoundNum++;
@@ -174,7 +177,8 @@ class NewGameState implements NewGameStateInterface{
 
             }
             return new NewGameState(this.setup,newD,newMrX,newLog,newmoves,newMrXTurn,newPlayed,newRoundNum,newRemaining);
-        } else {
+        }
+        else {
             // MrX is moving
             Iterator<ScotlandYard.Ticket> ticketIter = move.tickets().iterator();
             if (move instanceof Move.DoubleMove) {
@@ -204,7 +208,7 @@ class NewGameState implements NewGameStateInterface{
         ImmutableSet<Move> newMoves =null;  // can recompute later in availableMoves
 
 
-        return new NewGameState(this.setup, newD, newMrX, newLog, newMoves, newMrXTurn, newPlayed,newRoundNum,this.remaining);
+        return new NewGameState(this.setup, newD, newMrX, newLog, null, newMrXTurn, newPlayed,newRoundNum,this.remaining);
     }
 
 //    public Optional<Board.TicketBoard> playerTickets(Piece piece) {
@@ -390,6 +394,31 @@ class NewGameState implements NewGameStateInterface{
 
         this.moves = ImmutableSet.copyOf(moves);  // freeze once
         return this.moves;
+    }
+    public ImmutableSet<Move> statelessAvailableMoves(ImmutableSet<Piece> newPlayed ) {
+
+//        if (this.moves != null) {
+//            return this.moves;
+//        }
+
+        Set<Move> moves = new HashSet<>();
+
+        if (mrxTurn) {
+            moves.addAll(makeSingleMoves(setup, detectives, mrX, mrX.location()));
+            moves.addAll(makeDoubleMoves(setup, detectives, mrX, mrX.location()));
+        } else {
+            ImmutableSet.Builder<Piece> newRemaining= ImmutableSet.<Piece>builder();
+            for (Player p : detectives) {
+                if (!newPlayed.contains(p.piece())) {
+                    moves.addAll(makeSingleMoves(setup, detectives, p, p.location()));
+                    newRemaining.add(p.piece());
+                }
+            }
+            this.remainingdummy=newRemaining.build();
+        }
+
+         return ImmutableSet.copyOf(moves);  // freeze once
+
     }
     private Set<Move.DoubleMove> makeDoubleMoves(GameSetup setup, List<Player> detectives, Player player, int source){
         List<Integer> detectiveLocations = this.detectives.stream().map(p->p.location()).toList();

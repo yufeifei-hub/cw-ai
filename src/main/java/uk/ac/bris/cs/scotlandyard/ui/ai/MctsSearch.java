@@ -31,7 +31,7 @@ public class MctsSearch {
 
     //selection
     private MctsNode select(MctsNode node) {
-        if (!node.fullyExpanded() || node.state.availableMoves().isEmpty()) {
+        if (!node.fullyExpanded() || node.state.statelessAvailableMoves(node.state.played).isEmpty()) {
             return node;
         }
 
@@ -44,20 +44,27 @@ public class MctsSearch {
 
     //expansion
     private MctsNode expand(MctsNode node) {
-        var availableMoves = node.state.availableMoves();
-
+        if (node.visitCount==0){
+            return node;
+        }
+        var availableMoves = node.state.statelessAvailableMoves(node.state.played);
+//        System.out.println(availableMoves);
         // choose the first move we haven't tried
         for (Move move : availableMoves) {
             boolean exists = node.children.stream()
                     .anyMatch(child -> child.move.equals(move));
             if (!exists) {
+
                 NewGameState nextState = node.state.advanceState(move);
                 MctsNode newNode = new MctsNode(nextState, move, node);
                 node.children.add(newNode);
-                return newNode;
+                node.state.moves=null;
+
             }
+
+            node.state.moves=null;
         }
-        return node;
+        return node.children.isEmpty()?node:node.children.get(0);
     }
 
     //rollout(simulation with our minimax)

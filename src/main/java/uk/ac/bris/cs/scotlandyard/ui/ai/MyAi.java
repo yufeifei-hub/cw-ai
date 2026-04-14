@@ -40,8 +40,9 @@ public class MyAi implements Ai {
 		List<Player> DetectivePlayer = detectiveLocations.keySet().stream().map(d->new Player(d,tickets.get(d),detectiveLocations.get(d))).toList();
 		int MrXLocation;
 		if(board.getMrXTravelLog().isEmpty()){
-			int randomSeed = (int) System.currentTimeMillis();
-			MrXLocation = ScotlandYard.generateMrXLocation(randomSeed);
+			MrXLocation=board.getAvailableMoves().stream().findFirst().get().source();
+//			int randomSeed = (int) System.currentTimeMillis();
+//			MrXLocation = ScotlandYard.generateMrXLocation(randomSeed);
 		}else{
 			Optional<Integer> MrXLocationtoUpdate =
 					NewGameState.revealedtravelLog.get(NewGameState.revealedtravelLog.size() - 1).location();
