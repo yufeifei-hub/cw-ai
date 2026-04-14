@@ -53,7 +53,7 @@ public class MiniMax implements MiniMaxInterface {
 
 
         Set<Move> availableMoves = currentState.statelessAvailableMoves(currentState.played);
-        System.out.println(availableMoves.size());
+        System.out.println(currentState.played.size());
 
         if (ismrx) {
             int maxScore = Integer.MIN_VALUE;

@@ -395,7 +395,7 @@ class NewGameState implements NewGameStateInterface{
         this.moves = ImmutableSet.copyOf(moves);  // freeze once
         return this.moves;
     }
-    public ImmutableSet<Move> statelessAvailableMoves(ImmutableSet<Piece> newPlayed ) {
+    public ImmutableSet<Move> filteredAvailableMoves(ImmutableSet<Piece> newPlayed ) {
 
 //        if (this.moves != null) {
 //            return this.moves;
@@ -418,6 +418,31 @@ class NewGameState implements NewGameStateInterface{
         }
 
          return ImmutableSet.copyOf(moves);  // freeze once
+
+    }
+    public ImmutableSet<Move> statelessAvailableMoves(ImmutableSet<Piece> newPlayed ) {
+
+//        if (this.moves != null) {
+//            return this.moves;
+//        }
+
+        Set<Move> moves = new HashSet<>();
+
+        if (mrxTurn) {
+            moves.addAll(makeSingleMoves(setup, detectives, mrX, mrX.location()));
+            moves.addAll(makeDoubleMoves(setup, detectives, mrX, mrX.location()));
+        } else {
+            ImmutableSet.Builder<Piece> newRemaining= ImmutableSet.<Piece>builder();
+            for (Player p : detectives) {
+                if (!newPlayed.contains(p.piece())) {
+                    moves.addAll(makeSingleMoves(setup, detectives, p, p.location()));
+                    newRemaining.add(p.piece());
+                }
+            }
+            this.remainingdummy=newRemaining.build();
+        }
+
+        return ImmutableSet.copyOf(moves);  // freeze once
 
     }
     private Set<Move.DoubleMove> makeDoubleMoves(GameSetup setup, List<Player> detectives, Player player, int source){
@@ -507,7 +532,58 @@ class NewGameState implements NewGameStateInterface{
 
         return moves;
     }
+    private  Set<Move.SingleMove> makeSingleMovesFiltered(GameSetup setup, List<Player> detectives, Player player, int source){
+        List<Integer> detectiveLocations = this.detectives.stream().map(p->p.location()).toList();
+        Optional<Board.TicketBoard> tickets=playerTickets(player.piece());
+        if (!tickets.isPresent()){
+            return Set.of();//imutable empty set
+        }
+        Board.TicketBoard ticketsActual=tickets.get();
+        // TODO create an empty collection of some sort, say, HashSet, to store all the SingleMove we generate
+        Set<Move.SingleMove> moves = new HashSet<>();
+        for(int destination : setup.graph.adjacentNodes(source)) {
+            // TODO find out if destination is occupied by a detective
+            //  if the location is occupied, don't add to the collection of moves to return
+            if (!detectiveLocations.contains(destination)) {
+                if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.TAXI)){
+                    if (ticketsActual.getCount(ScotlandYard.Ticket.TAXI)>=1){
+                        moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.TAXI,destination));
+                  break;
+                }else if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.BUS)){
+                    break;
+                }else if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.UNDERGROUND)){
+                    break;
+                }if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.FERRY)){
+                    break;
+                }
+                for (ScotlandYard.Transport t : setup.graph.edgeValueOrDefault(source, destination, ImmutableSet.of())) {
+                    // TODO find out if the player has the required tickets
+                    //  if it does, construct a SingleMove and add it the collection of moves to return
+                    if (ticketsActual.getCount(t.requiredTicket())>=1){
+                        moves.add(new Move.SingleMove(player.piece(), source,t.requiredTicket(),destination));
+                        if (t.requiredTicket()!= ScotlandYard.Ticket.SECRET &&player.isMrX()&&ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1){
+                            moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.SECRET,destination));
+                        }
+                    }else{
+                        if(ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1){
 
+                            moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.SECRET,destination));
+                        }
+                    }
+                }
+
+                // TODO consider the rules of secret moves here
+                //  add moves to the destination via a secret ticket if there are any left with the player
+            }
+
+        }
+
+
+
+
+
+        return moves;
+    }
     public ImmutableSet<Piece> winner() {
         // Detectors win if MrX is captured or out of moves
         for (Player p : detectives) {

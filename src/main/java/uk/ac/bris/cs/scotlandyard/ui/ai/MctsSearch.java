@@ -21,6 +21,7 @@ public class MctsSearch {
 
         //MCTS tree
         for (int i = 0; i < iterations; i++) {
+            System.out.println("next");
             MctsNode selectedNode = select(rootNode);
             MctsNode expandedNode = expand(selectedNode);
             int simulationResult = rollout(expandedNode.state);
