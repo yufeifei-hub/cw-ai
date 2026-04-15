@@ -22,7 +22,7 @@ public class MiniMax implements MiniMaxInterface {
     }
 
     @Override
-    public Integer Minimax( NewGameState currentState, Integer depth, Integer alpha, Integer beta, boolean ismrx) {
+    public long Minimax( NewGameState currentState, Integer depth, long alpha, long beta, boolean ismrx) {
 //        System.out.println(ismrx);
         List<Player> detectives =currentState.detectives;
 
@@ -39,7 +39,7 @@ public class MiniMax implements MiniMaxInterface {
         if (depth == 0 || !currentState.winner().isEmpty()) {
             ImmutableSet<Piece> winners = currentState.winner();
             if (!winners.isEmpty()) {
-
+                System.out.println("howdy");
                 if (winners.contains(currentState.mrX.piece())) {
 
                     return Integer.MAX_VALUE;
@@ -57,17 +57,17 @@ public class MiniMax implements MiniMaxInterface {
         System.out.println(availableMoves.size());
 
         if (ismrx) {
-            int maxScore = Integer.MIN_VALUE;
+            long maxScore = Long.MIN_VALUE;
             for (Move move : availableMoves) {
-                System.out.println("pic");
+
                 NewGameState nextstate = currentState.advanceState(move);
-                System.out.println("pic");
-                int childScore = Minimax(nextstate,depth - 1, alpha, beta, false);
+
+                long childScore = Minimax(nextstate,depth - 1, alpha, beta, false);
 
 
                 for (Integer i:nextstate.detectiveLocations){ //WHY CHECKING DETECTIVE LOCATION HERE
                     if(calc.getdistance(nextstate.mrX.location(),i)<=1){
-                        childScore+=Integer.MIN_VALUE/15;
+                        childScore+=Integer.MIN_VALUE/4;
                         break;
                     }
                 }
@@ -83,10 +83,10 @@ public class MiniMax implements MiniMaxInterface {
             return maxScore;
         } else {
 
-            int minScore = Integer.MAX_VALUE;
+            long minScore = Long.MAX_VALUE;
             for (Move move : availableMoves) {
                 NewGameState nextstate = currentState.advanceState(move);
-                int childScore;
+                long childScore;
                 if (nextstate.played.isEmpty()){ // WHAT IS THE PURPOSE OF THIS
                      childScore = Minimax(nextstate, depth - 1, alpha, beta, true);
 

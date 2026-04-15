@@ -93,7 +93,7 @@ public class MyAi implements Ai {
 //			}
 //		}
 		NewGameState rootState = new NewGameState(setup,DetectivePlayer,mrX,travalLog,board.getAvailableMoves(),true,ImmutableSet.of(),NewGameState.roundNum,ImmutableSet.of());
-		Move bestmove = mcts.getBestMove(rootState, 2000);
+		Move bestmove = mcts.getBestMove(rootState, 500);
 
 		//need to check if this null check is still valid and only happens if all moves wehre equally horrible or is there some other edge case that causes it as well
 		if (bestmove == null) {

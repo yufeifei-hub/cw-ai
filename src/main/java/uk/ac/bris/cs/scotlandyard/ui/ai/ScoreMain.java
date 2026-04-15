@@ -10,8 +10,8 @@ import static java.util.stream.Collectors.toList;
 
 public class ScoreMain implements ScoreInterface {
     
-    public Integer score(Player MrX, List<Player> detectives,ImmutableList<LogEntry> travelog,DistanceMainCalculator distancematrix){
-        System.out.println("getting score");
+    public long score(Player MrX, List<Player> detectives,ImmutableList<LogEntry> travelog,DistanceMainCalculator distancematrix){
+//        System.out.println("getting score");
 //        final int MrxLocation = MrX.location();
 //        final List<Integer> detectiveLocations = detectives.stream().map(detl-> detl.location()).toList();
         final int MrxLocation = MrX.location();
@@ -31,16 +31,16 @@ public class ScoreMain implements ScoreInterface {
         ImmutableList<LogEntry> log = travelog;
         int currentMove = log.size() + 1;
         boolean isRvealRound = ScotlandYard.REVEAL_MOVES.contains(currentMove);
-        int totalScore = 0;
+        long totalScore = 0;
 
         if (avarageDistance < 2){
-            totalScore -= Integer.MAX_VALUE / 2; // he is likely to be surrounded as the avarage suggest that many are around 2 nodes away.
+            totalScore -= Integer.MAX_VALUE / 6; // he is likely to be surrounded as the avarage suggest that many are around 2 nodes away.
             //high penalty
         } else {
             if (isRvealRound) {
-                totalScore -= avarageDistance * 120;
+                totalScore += avarageDistance * 120;
             } else {
-                totalScore -= avarageDistance * 100;
+                totalScore += avarageDistance * 100;
             }
         }
 
@@ -84,18 +84,18 @@ public class ScoreMain implements ScoreInterface {
         }
 
         //don't want mrx to always just stay in several positions
-        long recentClose = travelog.stream()
-                .limit(3)
-                .filter(logEntry -> {
-                    Integer logLoc = logEntry.location().orElse(-1);
-                    if (logLoc == -1) return false;
-                    return distancematrix.getdistance(logLoc, MrxLocation) <= 2; //count those within 2 spaces from the current position in the last 3 steps
-                })
-                .count();
-
-        if (recentClose >= 2) {
-            totalScore -= Integer.MAX_VALUE / 2;
-        }
+//        long recentClose = travelog.stream()
+//                .limit(3)
+//                .filter(logEntry -> {
+//                    Integer logLoc = logEntry.location().orElse(-1);
+//                    if (logLoc == -1) return false;
+//                    return distancematrix.getdistance(logLoc, MrxLocation) <= 2; //count those within 2 spaces from the current position in the last 3 steps
+//                })
+//                .count();
+//
+//        if (recentClose >= 2) {
+//            totalScore -= Integer.MAX_VALUE / 2;
+//        }
 
 
 

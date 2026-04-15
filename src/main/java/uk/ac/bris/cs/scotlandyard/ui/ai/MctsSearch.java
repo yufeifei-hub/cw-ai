@@ -7,9 +7,9 @@ import java.util.NoSuchElementException;
 public class MctsSearch {
     private final MiniMax miniMax; //here we use minimax for simulation
     private final ScoreMain scoreMain;
-    private final DistanceCalculator distanceCalculator;
+    private final DistanceMainCalculator distanceCalculator;
 
-    public MctsSearch (MiniMax miniMax, ScoreMain scoreMain, DistanceCalculator distanceCalculator) {
+    public MctsSearch (MiniMax miniMax, ScoreMain scoreMain, DistanceMainCalculator distanceCalculator) {
         this.miniMax = miniMax;
         this.scoreMain = scoreMain;
         this.distanceCalculator = distanceCalculator;
@@ -21,10 +21,11 @@ public class MctsSearch {
 
         //MCTS tree
         for (int i = 0; i < iterations; i++) {
-            System.out.println("next");
+//            System.out.println("next "+Integer.MIN_VALUE);
             MctsNode selectedNode = select(rootNode);
             MctsNode expandedNode = expand(selectedNode);
-            int simulationResult = rollout(expandedNode.state);
+            long simulationResult = rollout(expandedNode.state);
+//            System.out.println("simu"+simulationResult);
             backpropagate(expandedNode, simulationResult);
         }
         return getBestChild(rootNode).move;
@@ -48,7 +49,9 @@ public class MctsSearch {
         if (node.visitCount==0){
             return node;
         }
+//        var availableMoves = node.state.filteredAvailableMoves(node.state.played,distanceCalculator);
         var availableMoves = node.state.statelessAvailableMoves(node.state.played);
+//        System.out.println(availableMoves.size());
 //        System.out.println(availableMoves);
         // choose the first move we haven't tried
         for (Move move : availableMoves) {
@@ -60,6 +63,7 @@ public class MctsSearch {
                 MctsNode newNode = new MctsNode(nextState, move, node);
                 node.children.add(newNode);
                 node.state.moves=null;
+                return newNode;
 
             }
 
@@ -69,8 +73,8 @@ public class MctsSearch {
     }
 
     //rollout(simulation with our minimax)
-    private int rollout(NewGameState state) {
-        int fixedDepth = 7;
+    private long rollout(NewGameState state) {
+        int fixedDepth = 3;
         return miniMax.Minimax(
                 state,
                 fixedDepth,
@@ -81,11 +85,13 @@ public class MctsSearch {
     }
 
     //backpropagation
-    private void backpropagate(MctsNode node, int result) {
+    private void backpropagate(MctsNode node,long result) {
         MctsNode current = node;
+
         while (current != null) {
             current.visitCount++;
-            current.totalScore += result;
+            // flip score perspective based on whose turn it is
+            current.totalScore += current.state.isMrxTurn() ? result : -result;
             current = current.parent;
         }
     }
@@ -102,10 +108,23 @@ public class MctsSearch {
 
     //choose the move with the highest score
     private MctsNode getBestChild(MctsNode rootNode) {
+
         return rootNode.children.stream()
-                .max(Comparator.comparingDouble(child ->
-                        (double) child.totalScore / child.visitCount
-                ))
+                .max(Comparator.comparingDouble(child -> {
+                    double value = (double) child.totalScore/child.visitCount;
+//                    System.out.println("Child score: " + value);
+                    return value;
+                }))
+                .map(child -> {
+                    double maxValue = (double) child.totalScore;
+//                    System.out.println("Maximum: " + maxValue);
+                    return child;
+                })
                 .orElseThrow(() -> new NoSuchElementException("No available moves"));
+//        return rootNode.children.stream()
+//                .max(Comparator.comparingDouble(child ->
+//                        (double) child.totalScore / child.visitCount
+//                ))
+//                .orElseThrow(() -> new NoSuchElementException("No available moves"));
     }
 }

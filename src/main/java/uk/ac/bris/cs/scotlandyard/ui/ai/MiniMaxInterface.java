@@ -10,5 +10,5 @@ import javax.annotation.Nonnull;
 import java.util.List;
 
 public interface MiniMaxInterface {
-    Integer Minimax(NewGameState currentState, Integer depth, Integer alpha, Integer beta, boolean isMrx);
+    long Minimax(NewGameState currentState, Integer depth, long alpha, long beta, boolean isMrx);
 }

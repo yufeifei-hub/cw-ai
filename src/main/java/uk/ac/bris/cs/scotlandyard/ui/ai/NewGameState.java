@@ -68,19 +68,23 @@ class NewGameState implements NewGameStateInterface{
         this.detectives=dete;
         this.mrX = mrX;
         this.travelLog = travelLog;
-        this.moves = moves;
+        this.moves = null;
+
         this.mrxTurn = mrxturn;
         this.played = played;
         this.setup=setup;
-        this.currentWinners=winner();
-        if (!this.currentWinners.isEmpty()){
-            this.moves=ImmutableSet.of();
-        }
+
+
         this.minMaxRoundNum=roundnum;
         this.remaining=remaining;
 
         for (Player detective : this.detectives) {
             this.detectiveLocations.add(detective.location());
+        }
+        this.moves=availableMoves();
+        this.currentWinners=winner();
+        if (!this.currentWinners.isEmpty()){
+            this.moves=ImmutableSet.of();
         }
     }
     public NewGameState advanceState(Move move) {
@@ -201,7 +205,7 @@ class NewGameState implements NewGameStateInterface{
                 newMrX = newMrX.use(t1).at(destination.get(0));
 
             }
-            newMrXTurn = false;
+
         }
 
         // 4. compute new moves
@@ -437,8 +441,10 @@ class NewGameState implements NewGameStateInterface{
         Set<Move> moves = new HashSet<>();
 
         if (mrxTurn) {
-            moves.addAll(makeSingleMovesFiltered(setup, detectives, mrX, mrX.location(),-3));
-            moves.addAll(makeDoubleMovesFiltered(setup, detectives, mrX, mrX.location()));
+//            moves.addAll(makeSingleMovesFiltered(setup, detectives, mrX, mrX.location(),-3));
+//            moves.addAll(makeDoubleMovesFiltered(setup, detectives, mrX, mrX.location()));
+                    moves.addAll(makeSingleMoves(setup, detectives, mrX, mrX.location()));
+                    moves.addAll(makeDoubleMoves(setup, detectives, mrX, mrX.location()));
         } else {
             ImmutableSet.Builder<Piece> newRemaining= ImmutableSet.<Piece>builder();
             for (Player p : detectives) {
