@@ -395,12 +395,13 @@ class NewGameState implements NewGameStateInterface{
         this.moves = ImmutableSet.copyOf(moves);  // freeze once
         return this.moves;
     }
-    public ImmutableSet<Move> filteredAvailableMoves(ImmutableSet<Piece> newPlayed ) {
+    //TODO:stateless as well
+    public ImmutableSet<Move> filteredAvailableMoves(ImmutableSet<Piece> newPlayed ,DistanceMainCalculator distancematrix) {
 
 //        if (this.moves != null) {
 //            return this.moves;
 //        }
-
+        System.out.println(mrxTurn);
         Set<Move> moves = new HashSet<>();
 
         if (mrxTurn) {
@@ -410,7 +411,14 @@ class NewGameState implements NewGameStateInterface{
             ImmutableSet.Builder<Piece> newRemaining= ImmutableSet.<Piece>builder();
             for (Player p : detectives) {
                 if (!newPlayed.contains(p.piece())) {
-                    moves.addAll(makeSingleMoves(setup, detectives, p, p.location()));
+                    if (distancematrix.getdistance(p.location(),this.mrX.location())>2){
+                        int destin=distancematrix.getNextBestMove(p.location(),this.mrX.location());
+                        moves.addAll(makeSingleMovesFiltered(setup,detectives,p,p.location(),destin));
+                        System.out.println("hout");
+                    }else {
+                        moves.addAll(makeSingleMovesFiltered(setup, detectives, p, p.location(),-1));
+                    }
+
                     newRemaining.add(p.piece());
                 }
             }
@@ -429,8 +437,8 @@ class NewGameState implements NewGameStateInterface{
         Set<Move> moves = new HashSet<>();
 
         if (mrxTurn) {
-            moves.addAll(makeSingleMoves(setup, detectives, mrX, mrX.location()));
-            moves.addAll(makeDoubleMoves(setup, detectives, mrX, mrX.location()));
+            moves.addAll(makeSingleMovesFiltered(setup, detectives, mrX, mrX.location(),-3));
+            moves.addAll(makeDoubleMovesFiltered(setup, detectives, mrX, mrX.location()));
         } else {
             ImmutableSet.Builder<Piece> newRemaining= ImmutableSet.<Piece>builder();
             for (Player p : detectives) {
@@ -491,6 +499,83 @@ class NewGameState implements NewGameStateInterface{
         }
         return moves;
     }
+    private Set<Move.DoubleMove> makeDoubleMovesFiltered(GameSetup setup, List<Player> detectives, Player player, int source){
+        List<Integer> detectiveLocations = this.detectives.stream().map(p->p.location()).toList();
+        Set<Move.DoubleMove> moves = new HashSet<>();
+        Set<Move.SingleMove> singlemoves=makeSingleMoves(setup,detectives,player,source);
+        Optional<Board.TicketBoard> tickets=playerTickets(player.piece());
+        if (!tickets.isPresent()){
+            return Set.of();
+        }
+        Board.TicketBoard ticketsActual=tickets.get();
+
+        if(ticketsActual.getCount(ScotlandYard.Ticket.DOUBLE)<1||setup.moves.size()<2){
+            return Set.of();
+        }
+        for (Move.SingleMove move1:singlemoves){
+            int newSource=move1.destination;
+            for(int destination : setup.graph.adjacentNodes(newSource)) {
+                if (!detectiveLocations.contains(destination)) {
+                    if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.TAXI)){
+                        if (ScotlandYard.Ticket.TAXI==move1.ticket&&ticketsActual.getCount(ScotlandYard.Ticket.TAXI)>=2|| ScotlandYard.Ticket.TAXI!=move1.ticket&&ticketsActual.getCount(ScotlandYard.Ticket.TAXI)>=1&&ticketsActual.getCount(move1.ticket)>=1){
+                            moves.add(new Move.DoubleMove(player.piece(), source,move1.ticket,newSource, ScotlandYard.Ticket.TAXI,destination));
+
+
+                            break;
+                        }
+
+                    }if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.BUS)){
+                        if (ScotlandYard.Ticket.BUS==move1.ticket&&ticketsActual.getCount(ScotlandYard.Ticket.BUS)>=2|| ScotlandYard.Ticket.BUS!=move1.ticket&&ticketsActual.getCount(ScotlandYard.Ticket.BUS)>=1&&ticketsActual.getCount(move1.ticket)>=1){
+                            moves.add(new Move.DoubleMove(player.piece(), source,move1.ticket,newSource, ScotlandYard.Ticket.BUS,destination));
+
+
+                            break;
+                        }
+                    }if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.UNDERGROUND)){
+
+                        if (ScotlandYard.Ticket.UNDERGROUND==move1.ticket&&ticketsActual.getCount(ScotlandYard.Ticket.UNDERGROUND)>=2|| ScotlandYard.Ticket.UNDERGROUND!=move1.ticket&&ticketsActual.getCount(ScotlandYard.Ticket.UNDERGROUND)>=1&&ticketsActual.getCount(move1.ticket)>=1){
+                            moves.add(new Move.DoubleMove(player.piece(), source,move1.ticket,newSource, ScotlandYard.Ticket.UNDERGROUND,destination));
+
+
+                            break;
+                        }
+                    }if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.FERRY)){
+                        if (ScotlandYard.Ticket.SECRET==move1.ticket&&ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=2|| ScotlandYard.Ticket.SECRET!=move1.ticket&&ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1&&ticketsActual.getCount(move1.ticket)>=1){
+                            moves.add(new Move.DoubleMove(player.piece(), source,move1.ticket,newSource, ScotlandYard.Ticket.SECRET,destination));
+
+
+                            break;
+                        }
+                    }
+//                    for (ScotlandYard.Transport t : setup.graph.edgeValueOrDefault(newSource, destination, ImmutableSet.of())) {
+//
+//                        if (t.requiredTicket()==move1.ticket&&ticketsActual.getCount(t.requiredTicket())>=2||t.requiredTicket()!=move1.ticket&&ticketsActual.getCount(t.requiredTicket())>=1&&ticketsActual.getCount(move1.ticket)>=1){
+//                            moves.add(new Move.DoubleMove(player.piece(), source,move1.ticket,newSource,t.requiredTicket(),destination));
+//
+//                            if (move1.ticket== ScotlandYard.Ticket.SECRET&&t.requiredTicket()!= ScotlandYard.Ticket.SECRET&&ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=2){
+//
+//                                moves.add(new Move.DoubleMove(player.piece(), source, ScotlandYard.Ticket.SECRET,newSource, ScotlandYard.Ticket.SECRET,destination));
+//
+//                            }else if(move1.ticket!= ScotlandYard.Ticket.SECRET&&t.requiredTicket()!= ScotlandYard.Ticket.SECRET&&ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1){
+//                                moves.add(new Move.DoubleMove(player.piece(), source,move1.ticket,newSource, ScotlandYard.Ticket.SECRET,destination));
+//                            }
+//
+//                        }else{
+//
+//                            if (move1.ticket== ScotlandYard.Ticket.SECRET&&t.requiredTicket()!= ScotlandYard.Ticket.SECRET&&ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=2){
+//
+//                                moves.add(new Move.DoubleMove(player.piece(), source, ScotlandYard.Ticket.SECRET,newSource, ScotlandYard.Ticket.SECRET,destination));
+//
+//                            }else if(move1.ticket!= ScotlandYard.Ticket.SECRET&&t.requiredTicket()!= ScotlandYard.Ticket.SECRET&&ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1){
+//                                moves.add(new Move.DoubleMove(player.piece(), source,move1.ticket,newSource, ScotlandYard.Ticket.SECRET,destination));
+//                            }
+//                        }
+//                    }
+                }
+            }
+        }
+        return moves;
+    }
     private  Set<Move.SingleMove> makeSingleMoves(GameSetup setup, List<Player> detectives, Player player, int source){
         List<Integer> detectiveLocations = this.detectives.stream().map(p->p.location()).toList();
         Optional<Board.TicketBoard> tickets=playerTickets(player.piece());
@@ -532,7 +617,7 @@ class NewGameState implements NewGameStateInterface{
 
         return moves;
     }
-    private  Set<Move.SingleMove> makeSingleMovesFiltered(GameSetup setup, List<Player> detectives, Player player, int source){
+    private  Set<Move.SingleMove> makeSingleMovesFiltered(GameSetup setup, List<Player> detectives, Player player, int source,int fixedDestin){
         List<Integer> detectiveLocations = this.detectives.stream().map(p->p.location()).toList();
         Optional<Board.TicketBoard> tickets=playerTickets(player.piece());
         if (!tickets.isPresent()){
@@ -541,40 +626,71 @@ class NewGameState implements NewGameStateInterface{
         Board.TicketBoard ticketsActual=tickets.get();
         // TODO create an empty collection of some sort, say, HashSet, to store all the SingleMove we generate
         Set<Move.SingleMove> moves = new HashSet<>();
-        for(int destination : setup.graph.adjacentNodes(source)) {
-            // TODO find out if destination is occupied by a detective
-            //  if the location is occupied, don't add to the collection of moves to return
-            if (!detectiveLocations.contains(destination)) {
-                if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.TAXI)){
-                    if (ticketsActual.getCount(ScotlandYard.Ticket.TAXI)>=1){
-                        moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.TAXI,destination));
-                  break;
-                }else if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.BUS)){
-                    break;
-                }else if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.UNDERGROUND)){
-                    break;
-                }if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.FERRY)){
-                    break;
-                }
-                for (ScotlandYard.Transport t : setup.graph.edgeValueOrDefault(source, destination, ImmutableSet.of())) {
-                    // TODO find out if the player has the required tickets
-                    //  if it does, construct a SingleMove and add it the collection of moves to return
-                    if (ticketsActual.getCount(t.requiredTicket())>=1){
-                        moves.add(new Move.SingleMove(player.piece(), source,t.requiredTicket(),destination));
-                        if (t.requiredTicket()!= ScotlandYard.Ticket.SECRET &&player.isMrX()&&ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1){
-                            moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.SECRET,destination));
-                        }
-                    }else{
-                        if(ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1){
+        if (fixedDestin>0){
+            if (!detectiveLocations.contains(fixedDestin)) {
+                if (setup.graph.edgeValueOrDefault(source,fixedDestin,ImmutableSet.of()).contains(ScotlandYard.Transport.TAXI)){
+                    if (ticketsActual.getCount(ScotlandYard.Ticket.TAXI)>=1) {
+                        moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.TAXI, fixedDestin));
 
-                            moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.SECRET,destination));
-                        }
+                    }
+
+                }if (setup.graph.edgeValueOrDefault(source,fixedDestin,ImmutableSet.of()).contains(ScotlandYard.Transport.BUS)){
+                    if (ticketsActual.getCount(ScotlandYard.Ticket.BUS)>=1) {
+                        moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.BUS, fixedDestin));
+
+                    }
+                }if (setup.graph.edgeValueOrDefault(source,fixedDestin,ImmutableSet.of()).contains(ScotlandYard.Transport.UNDERGROUND)){
+
+                    if (ticketsActual.getCount(ScotlandYard.Ticket.UNDERGROUND)>=1) {
+                        moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.UNDERGROUND, fixedDestin));
+
+                    }
+                }if (setup.graph.edgeValueOrDefault(source,fixedDestin,ImmutableSet.of()).contains(ScotlandYard.Transport.FERRY)){
+                    if (ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1) {
+                        moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.SECRET, fixedDestin));
+
                     }
                 }
 
+
                 // TODO consider the rules of secret moves here
-                //  add moves to the destination via a secret ticket if there are any left with the player
+                //  add moves to the fixedDestin via a secret ticket if there are any left with the player
             }
+        }else  {
+            for(int destination : setup.graph.adjacentNodes(source)) {
+                // TODO find out if destination is occupied by a detective
+                //  if the location is occupied, don't add to the collection of moves to return
+                if (!detectiveLocations.contains(destination)) {
+                    if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.TAXI)){
+                        if (ticketsActual.getCount(ScotlandYard.Ticket.TAXI)>=1) {
+                            moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.TAXI, destination));
+                            break;
+                        }
+
+                    }if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.BUS)){
+                        if (ticketsActual.getCount(ScotlandYard.Ticket.BUS)>=1) {
+                            moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.BUS, destination));
+                            break;
+                        }
+                    }if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.UNDERGROUND)){
+
+                        if (ticketsActual.getCount(ScotlandYard.Ticket.UNDERGROUND)>=1) {
+                            moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.UNDERGROUND, destination));
+                            break;
+                        }
+                    }if (setup.graph.edgeValueOrDefault(source,destination,ImmutableSet.of()).contains(ScotlandYard.Transport.FERRY)){
+                        if (ticketsActual.getCount(ScotlandYard.Ticket.SECRET)>=1) {
+                            moves.add(new Move.SingleMove(player.piece(), source, ScotlandYard.Ticket.SECRET, destination));
+                            break;
+                        }
+                    }
+
+
+                    // TODO consider the rules of secret moves here
+                    //  add moves to the destination via a secret ticket if there are any left with the player
+                }
+        }
+
 
         }
 

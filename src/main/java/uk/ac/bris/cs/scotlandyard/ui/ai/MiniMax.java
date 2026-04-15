@@ -52,14 +52,16 @@ public class MiniMax implements MiniMaxInterface {
 
 
 
-        Set<Move> availableMoves = currentState.statelessAvailableMoves(currentState.played);
-        System.out.println(currentState.played.size());
+        Set<Move> availableMoves = currentState.filteredAvailableMoves(currentState.played,calc);
+//        Set<Move> availableMoves = currentState.statelessAvailableMoves(currentState.played);
+        System.out.println(availableMoves.size());
 
         if (ismrx) {
             int maxScore = Integer.MIN_VALUE;
             for (Move move : availableMoves) {
-
+                System.out.println("pic");
                 NewGameState nextstate = currentState.advanceState(move);
+                System.out.println("pic");
                 int childScore = Minimax(nextstate,depth - 1, alpha, beta, false);
 
 

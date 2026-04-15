@@ -97,6 +97,10 @@ public class DistanceMainCalculator implements DistanceCalculator {
         this.adjNodesMrx = graphAcesss.adjacentNodes(source);
         return matrix[source][destination]; // gets shortest distance from specific source to destination
     }
+    public Integer getNextBestMove(Integer source, Integer destination){
+
+        return nextNode[source][destination]; // gets shortest distance from specific source to destination
+    }
 
 
 }
