@@ -25,7 +25,8 @@ public class MctsNode {
     }
 
     //to see if all the nodes all already been fully expanded
-    public boolean fullyExpanded() {
-        return children.size() == state.statelessAvailableMoves(state.played).size();
+    public boolean fullyExpanded(DistanceMainCalculator distancecalc) {
+        return children.size() == state.filteredAvailableMoves(state.played,distancecalc).size();
+//        return children.size() == state.statelessAvailableMoves(state.played).size();
     }
 }

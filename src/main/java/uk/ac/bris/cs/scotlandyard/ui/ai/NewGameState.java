@@ -188,23 +188,44 @@ class NewGameState implements NewGameStateInterface{
             if (move instanceof Move.DoubleMove) {
                 ScotlandYard.Ticket t1 = ticketIter.next();
                 ScotlandYard.Ticket t2 = ticketIter.next();
+                boolean reveal1 = newRoundNum - 1 >= setup.moves.size() || setup.moves.get(newRoundNum - 1);
+                boolean reveal2 = newRoundNum >= setup.moves.size() || setup.moves.get(newRoundNum);
                 newLog = ImmutableList.<LogEntry>builder()
                         .addAll(newLog)
-                        .add(setup.moves.get(newRoundNum - 1) ? LogEntry.reveal(t1, destination.get(0)) : LogEntry.hidden(t1))
-                        .add(setup.moves.get(newRoundNum) ? LogEntry.reveal(t2, destination.get(1)) : LogEntry.hidden(t2))
+                        .add(reveal1 ? LogEntry.reveal(t1, destination.get(0)) : LogEntry.hidden(t1))
+                        .add(reveal2 ? LogEntry.reveal(t2, destination.get(1)) : LogEntry.hidden(t2))
                         .build();
                 newMrX = newMrX.use(t1).use(t2).at(destination.get(1)).use(ScotlandYard.Ticket.DOUBLE).at(destination.get(1));
                 newRoundNum += 1;
             } else {
                 ScotlandYard.Ticket t1 = ticketIter.next();
-                boolean revealThis = setup.moves.get(newRoundNum);
+                boolean revealThis = newRoundNum >= setup.moves.size() || setup.moves.get(newRoundNum);
                 newLog = ImmutableList.<LogEntry>builder()
                         .addAll(newLog)
                         .add(revealThis ? LogEntry.reveal(t1, destination.get(0)) : LogEntry.hidden(t1))
                         .build();
                 newMrX = newMrX.use(t1).at(destination.get(0));
-
             }
+//            if (move instanceof Move.DoubleMove) {
+//                ScotlandYard.Ticket t1 = ticketIter.next();
+//                ScotlandYard.Ticket t2 = ticketIter.next();
+//                newLog = ImmutableList.<LogEntry>builder()
+//                        .addAll(newLog)
+//                        .add(setup.moves.get(newRoundNum - 1) ? LogEntry.reveal(t1, destination.get(0)) : LogEntry.hidden(t1))
+//                        .add(setup.moves.get(newRoundNum) ? LogEntry.reveal(t2, destination.get(1)) : LogEntry.hidden(t2))
+//                        .build();
+//                newMrX = newMrX.use(t1).use(t2).at(destination.get(1)).use(ScotlandYard.Ticket.DOUBLE).at(destination.get(1));
+//                newRoundNum += 1;
+//            } else {
+//                ScotlandYard.Ticket t1 = ticketIter.next();
+//                boolean revealThis = setup.moves.get(newRoundNum);
+//                newLog = ImmutableList.<LogEntry>builder()
+//                        .addAll(newLog)
+//                        .add(revealThis ? LogEntry.reveal(t1, destination.get(0)) : LogEntry.hidden(t1))
+//                        .build();
+//                newMrX = newMrX.use(t1).at(destination.get(0));
+//
+//            }
 
         }
 

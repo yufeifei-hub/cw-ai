@@ -3,7 +3,10 @@ package uk.ac.bris.cs.scotlandyard.ui.ai;
 import uk.ac.bris.cs.scotlandyard.model.Move;
 import java.util.Comparator;
 import java.util.NoSuchElementException;
-
+//TODO:Places to change for filtered minimax
+//mctsnode function(fully expanded)
+//expand mcts search
+//minimax as well
 public class MctsSearch {
     private final MiniMax miniMax; //here we use minimax for simulation
     private final ScoreMain scoreMain;
@@ -33,7 +36,7 @@ public class MctsSearch {
 
     //selection
     private MctsNode select(MctsNode node) {
-        if (!node.fullyExpanded() || node.state.statelessAvailableMoves(node.state.played).isEmpty()) {
+        if (!node.fullyExpanded(distanceCalculator) || node.state.statelessAvailableMoves(node.state.played).isEmpty()) {
             return node;
         }
 
@@ -49,8 +52,8 @@ public class MctsSearch {
         if (node.visitCount==0){
             return node;
         }
-//        var availableMoves = node.state.filteredAvailableMoves(node.state.played,distanceCalculator);
-        var availableMoves = node.state.statelessAvailableMoves(node.state.played);
+        var availableMoves = node.state.filteredAvailableMoves(node.state.played,distanceCalculator);
+//        var availableMoves = node.state.statelessAvailableMoves(node.state.played);
 //        System.out.println(availableMoves.size());
 //        System.out.println(availableMoves);
         // choose the first move we haven't tried

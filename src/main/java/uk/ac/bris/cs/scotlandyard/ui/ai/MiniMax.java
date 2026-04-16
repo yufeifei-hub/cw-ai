@@ -52,8 +52,8 @@ public class MiniMax implements MiniMaxInterface {
 
 
 
-//        Set<Move> availableMoves = currentState.filteredAvailableMoves(currentState.played,calc);
-        Set<Move> availableMoves = currentState.statelessAvailableMoves(currentState.played);
+        Set<Move> availableMoves = currentState.filteredAvailableMoves(currentState.played,calc);
+//        Set<Move> availableMoves = currentState.statelessAvailableMoves(currentState.played);
         System.out.println(availableMoves.size());
 
         if (ismrx) {
